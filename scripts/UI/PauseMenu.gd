@@ -42,6 +42,9 @@ func _show_pause() -> void:
 	visible = true
 	get_tree().paused = true
 	
+	# 🎯 EMITIR EVENTO
+	EventBus.game_paused.emit()
+	
 	# 🎯 Cerrar otros menús abiertos
 	if HUDManager:
 		HUDManager.close_all()
@@ -52,6 +55,9 @@ func _on_resume_pressed() -> void:
 	is_paused = false
 	visible = false
 	get_tree().paused = false
+	
+	# 🎯 EMITIR EVENTO
+	EventBus.game_resumed.emit()
 	
 	print("▶️ Juego reanudado")
 

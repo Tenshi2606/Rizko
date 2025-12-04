@@ -1,4 +1,11 @@
 # res://scripts/player/Player.gd
+## Clase principal del jugador
+##
+## Maneja todos los stats, componentes y comportamientos del jugador.
+## Usa un sistema de State Machine para gestionar estados (idle, run, jump, attack, etc.)
+## y componentes modulares para funcionalidades específicas.
+##
+## @tutorial: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 extends CharacterBody2D
 class_name Player
 
@@ -30,12 +37,20 @@ class_name Player
 
 @export_group("Combate Base")
 ## Daño base del jugador (modificado por armas)
+## Ejemplo: base=10, arma+5 = 15 de daño total
 @export var base_attack_damage: int = 10
+
 ## Probabilidad de crítico base (0.05 = 5%)
+## Se suma con el bonus del arma equipada
+## Ejemplo: base=0.05 + arma=0.10 = 15% de crítico
 @export var base_crit_chance: float = 0.05
+
 ## Multiplicador de daño crítico base (2.0 = x2 daño)
+## Se multiplica con el bonus del arma
 @export var base_crit_multiplier: float = 2.0
+
 ## Vida robada en crítico base
+## Solo se activa en golpes críticos
 @export var base_lifesteal: int = 0
 
 # 🔧 Stats actuales (calculados por arma equipada)
@@ -99,22 +114,54 @@ var aerial_freeze_timer: float = 0.0
 var stored_velocity: Vector2 = Vector2.ZERO
 
 # ============================================
-# COMPONENTES
+# COMPONENTES DEL PLAYER
 # ============================================
+# Todos los componentes son modulares y se comunican vía EventBus
+# cuando es posible para mantener bajo acoplamiento.
 
+## Sprite principal del jugador (AnimatedSprite2D)
+## Maneja todas las animaciones visuales
 @onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+
+## Hitbox de ataque (Area2D)
+## Detecta colisiones con enemigos durante ataques
+## Manejado por AttackComponent
 @onready var attack_hitbox: Area2D = $AttackHitbox
+
+## Sistema de inventario
+## Escucha eventos de EventBus para recoger items
+## Emite eventos cuando cambia el inventario
 @onready var inventory: InventoryComponent = $InventoryComponent
+
+## Sistema de habilidades desbloqueables
+## Gestiona dash, doble salto, wall jump, etc.
 @onready var ability_system: AbilitySystem = $AbilitySystem
+
+## Sistema de armas
+## Gestiona armas equipadas, munición, recarga
+## Emite eventos cuando cambia el arma
 @onready var weapon_system: WeaponSystem = $WeaponSystem
+
+# Referencias a componentes adicionales (obtenidas dinámicamente)
+var health_component: HealthComponent
+var movement_component: MovementComponent
+var animation_controller: AnimationController
+var attack_component: AttackComponent
 
 func _ready() -> void:
 	add_to_group("Player")
+	
+	# Obtener referencias a componentes
+	health_component = get_node_or_null("HealthComponent") as HealthComponent
+	movement_component = get_node_or_null("MovementComponent") as MovementComponent
+	animation_controller = get_node_or_null("AnimationController") as AnimationController
+	attack_component = get_node_or_null("AttackComponent") as AttackComponent
 	
 	# Registrarse en GameManager (deferred para evitar errores)
 	call_deferred("_register_in_game_manager")
 	
 	print("🎮 Player inicializado")
+	_print_component_status()
 
 func _register_in_game_manager() -> void:
 	if GameManager:
@@ -261,3 +308,90 @@ func _end_aerial_freeze() -> void:
 
 func can_aerial_freeze() -> bool:
 	return not is_on_floor() and not is_aerial_frozen
+
+# ============================================
+# MÉTODOS HELPER - COMPONENTES
+# ============================================
+
+## Obtener componente de salud
+## @return HealthComponent o null si no existe
+func get_health_component() -> HealthComponent:
+	return health_component
+
+## Obtener componente de movimiento
+## @return MovementComponent o null si no existe
+func get_movement_component() -> MovementComponent:
+	return movement_component
+
+## Obtener componente de animación
+## @return AnimationController o null si no existe
+func get_animation_controller() -> AnimationController:
+	return animation_controller
+
+## Obtener componente de ataque
+## @return AttackComponent o null si no existe
+func get_attack_component() -> AttackComponent:
+	return attack_component
+
+# ============================================
+# MÉTODOS HELPER - ESTADO DEL PLAYER
+# ============================================
+
+## Verificar si el player está vivo
+## @return true si health > 0
+func is_alive() -> bool:
+	return health > 0
+
+## Verificar si puede atacar
+## @return true si no está curándose ni es invulnerable
+func can_attack() -> bool:
+	return not is_in_healing_mode and not invulnerable
+
+## Obtener dirección de movimiento actual
+## @return -1 si mira izquierda, 1 si mira derecha
+func get_facing_direction() -> int:
+	return -1 if sprite.flip_h else 1
+
+## Verificar si está en el aire
+## @return true si no está en el suelo
+func is_in_air() -> bool:
+	return not is_on_floor()
+
+## Verificar si está cayendo
+## @return true si velocity.y > 0
+func is_falling() -> bool:
+	return velocity.y > 0
+
+## Verificar si está subiendo
+## @return true si velocity.y < 0
+func is_rising() -> bool:
+	return velocity.y < 0
+
+# ============================================
+# MÉTODOS HELPER - DEBUG
+# ============================================
+
+## Imprimir estado de componentes (debug)
+func _print_component_status() -> void:
+	print("  📦 Componentes:")
+	print("    ✅ Sprite: ", sprite != null)
+	print("    ✅ AttackHitbox: ", attack_hitbox != null)
+	print("    ✅ Inventory: ", inventory != null)
+	print("    ✅ AbilitySystem: ", ability_system != null)
+	print("    ✅ WeaponSystem: ", weapon_system != null)
+	print("    ", "✅" if health_component else "⚠️", " HealthComponent: ", health_component != null)
+	print("    ", "✅" if movement_component else "⚠️", " MovementComponent: ", movement_component != null)
+	print("    ", "✅" if animation_controller else "⚠️", " AnimationController: ", animation_controller != null)
+	print("    ", "✅" if attack_component else "⚠️", " AttackComponent: ", attack_component != null)
+
+## Imprimir stats actuales (debug)
+func print_stats() -> void:
+	print("=== 🎮 PLAYER STATS ===")
+	print("  ❤️ Vida: ", health, "/", max_health)
+	print("  ⚔️ Daño: ", attack_damage)
+	print("  🎯 Crítico: ", crit_chance * 100, "%")
+	print("  💥 Mult. Crítico: x", crit_multiplier)
+	print("  🩸 Lifesteal: ", lifesteal_on_crit)
+	print("  🏃 Velocidad: ", speed)
+	print("  🦘 Saltos: ", jumps_remaining, "/", max_jumps)
+	print("======================")

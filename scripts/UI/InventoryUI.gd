@@ -23,7 +23,12 @@ var weapon_slots: Array[Control] = []
 
 func _ready() -> void:
 	visible = false
-	print("🎒 InventoryUI inicializado (esperando jugador...)")
+	
+	# 🎯 CONECTAR A EVENTBUS PARA NOTIFICACIONES
+	EventBus.item_collected.connect(_on_item_collected_event)
+	EventBus.inventory_changed.connect(_on_inventory_changed)
+	
+	print("🎒 InventoryUI inicializado")
 
 # ============================================
 # 🆕 NUEVA FUNCIÓN - CONECTAR CON JUGADOR
@@ -242,6 +247,17 @@ func _update_wallet_from_player() -> void:
 
 func _on_inventory_changed() -> void:
 	_refresh_items()
+
+# 🎯 LISTENER DE EVENTBUS
+func _on_item_collected_event(item: Item, collector: Node) -> void:
+	# Solo procesar si el collector es el player actual
+	if collector != current_player:
+		return
+	
+	# Aquí se puede agregar notificación visual en el futuro
+	# Por ahora solo refrescar UI si está visible
+	if visible:
+		_refresh_items()
 
 func _on_selected_fragment_changed(_fragment: SoulFragment) -> void:
 	_update_selection_highlight()

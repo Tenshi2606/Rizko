@@ -140,39 +140,18 @@ func _collect(player: Player) -> void:
 		queue_free()
 		return
 	
-	# 🆕 SI ES MONEDA (ASTERIONES)
+	# 🎯 USAR EVENTBUS PARA MONEDAS
 	if item is Currency:
-		var wallet = player.get_node_or_null("Wallet") as Wallet
-		
-		if wallet:
-			wallet.add_asteriones(item.amount)
-			print("⭐ Recogido: %d Asteriones" % item.amount)
-			queue_free()
-		else:
-			push_warning("⚠️ Player no tiene Wallet component")
-			queue_free()
-		return
-	
-	# 🆕 SI ES OTRO ITEM (FRAGMENTOS, ETC.)
-	var inventory = player.get_node_or_null("InventoryComponent") as InventoryComponent
-	
-	if not inventory:
+		EventBus.currency_collected.emit(item.amount, player)
+		print("⭐ Recogido: %d Asteriones" % item.amount)
 		queue_free()
+
 		return
 	
-	# Verificar si el inventario puede aceptar el item
-	var can_add = _can_inventory_accept(inventory)
-	
-	if can_add:
-		# 🔧 SIEMPRE AGREGAR 1 ITEM (quantity es para monedas, no para items)
-		if inventory.add_item(item, 1):
-			print("✨ Recogido: %s" % item.name)
-			queue_free()
-		else:
-			print("⚠️ No se pudo añadir al inventario")
-	else:
-		print("⚠️ Inventario lleno para %s (máximo alcanzado)" % item.name)
-		# No recoger el item, dejarlo en el suelo
+	# 🎯 USAR EVENTBUS PARA ITEMS
+	EventBus.item_collected.emit(item, player)
+	print("✨ Recogido: %s" % item.name)
+	queue_free()
 
 # Verificar si el inventario puede aceptar este item
 func _can_inventory_accept(inventory: InventoryComponent) -> bool:
@@ -279,17 +258,10 @@ func setup_as_soul() -> void:
 			glow_energy = 0.8  # Moderado
 			rarity_name = "BLANCA"
 	
-	print("👻 Configurando alma ", rarity_name, " - Rareza: ", item.rarity)
-	print("  🎨 Color alma: ", soul_color)
-	print("  💡 Color luz: ", glow_color)
-	
 	# Reproducir animación del alma
 	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("soul"):
 		sprite.play("soul")
 		sprite.modulate = soul_color
-		print("  ✅ Sprite configurado con color")
-	else:
-		print("  ❌ Sprite no disponible o sin animación 'soul'")
 	
 	# Configurar brillo (PointLight2D con el color correspondiente)
 	if light:
@@ -297,9 +269,6 @@ func setup_as_soul() -> void:
 		light.color = glow_color
 		light.energy = glow_energy
 		light.texture_scale = 0.8
-		print("  ✅ Luz configurada - Color: ", glow_color, " | Energía: ", glow_energy)
-	else:
-		print("  ⚠️ PointLight2D no encontrado - agrega un PointLight2D a soul_pickup.tscn")
 	
 	# Configurar física (almas rebotan menos)
 	if physics_material_override:

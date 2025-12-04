@@ -26,6 +26,7 @@ ItemDB="*res://scripts/items/base/ItemDB.gd"
 AbilityDB="*res://scripts/abilities/AbilityDB.gd"
 WeaponDB="*res://scripts/weapons/Base/WeaponDB.gd"
 FreezeManager="*res://scripts/singletons/FreezeManager.gd"
+EventBus="*res://scripts/singletons/EventBus.gd"
 
 [display]
 

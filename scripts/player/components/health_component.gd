@@ -98,6 +98,10 @@ func take_damage(amount: int, knockback: Vector2 = Vector2.ZERO, source_pos: Vec
 	player.health = max(0, player.health - amount)
 	_update_health_bar()
 	
+	# 🎯 EMITIR EVENTOS
+	EventBus.player_damaged.emit(amount)
+	EventBus.player_health_changed.emit(player.health, player.max_health)
+	
 	player.invulnerable = true
 	invul_timer.start(player.invul_time)
 	
@@ -135,6 +139,10 @@ func heal(amount: int) -> void:
 	var healed = player.health - old_health
 	if healed > 0:
 		print("💚 Curado: +", healed, " HP (", player.health, "/", player.max_health, ")")
+		
+		# 🎯 EMITIR EVENTOS
+		EventBus.player_healed.emit(healed)
+		EventBus.player_health_changed.emit(player.health, player.max_health)
 		
 		# Feedback visual
 		if player.sprite:
@@ -210,9 +218,12 @@ func _on_invul_timeout() -> void:
 func die() -> void:
 	print("💀 Player murió")
 	
-	# 🆕 Mostrar pantalla de muerte vía GameManager
-	if GameManager:
-		GameManager.show_death_screen("default")
+	# 🎯 EMITIR EVENTO DE MUERTE
+	EventBus.player_died.emit()
+	
+	# 🆕 Mostrar pantalla de muerte vía GameManager (ya no necesario, DeathScreen escucha el evento)
+	# if GameManager:
+	# 	GameManager.show_death_screen("default")
 	
 	# TODO: Animación de muerte antes de destruir
 	# await get_tree().create_timer(1.0).timeout

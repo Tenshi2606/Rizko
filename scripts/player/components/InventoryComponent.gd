@@ -31,7 +31,43 @@ func _ready() -> void:
 		push_error("InventoryComponent debe ser hijo de un Player")
 		return
 	
+	# 🎯 CONECTAR A EVENTBUS
+	EventBus.item_collected.connect(_on_item_collected)
+	EventBus.currency_collected.connect(_on_currency_collected)
+	
 	print("🎒 Inventario inicializado - Slots: ", max_slots)
+
+# 🎯 LISTENER DE EVENTBUS - ITEMS
+func _on_item_collected(item: Item, collector: Node) -> void:
+	# Solo procesar si el collector es este player
+	if collector != player:
+		return
+	
+	# Verificar si puede agregar
+	if not _can_add_item(item):
+		print("⚠️ Inventario lleno para ", item.name)
+		return
+	
+	# Agregar item
+	add_item(item, 1)
+
+# 🎯 LISTENER DE EVENTBUS - MONEDA
+func _on_currency_collected(amount: int, collector: Node) -> void:
+	# Solo procesar si el collector es este player
+	if collector != player:
+		return
+	
+	var wallet = player.get_node_or_null("Wallet") as Wallet
+	if wallet:
+		wallet.add_asteriones(amount)
+
+# 🆕 VERIFICAR SI PUEDE AGREGAR ITEM
+func _can_add_item(item: Item) -> bool:
+	if items.has(item.id):
+		var current_quantity = items[item.id]["quantity"]
+		return current_quantity < item.max_stack
+	else:
+		return get_item_count() < max_slots
 
 func _process(delta: float) -> void:
 	# 🆕 ACTUALIZAR COOLDOWN DE CURACIÓN

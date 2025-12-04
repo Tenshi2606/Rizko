@@ -1,6 +1,6 @@
 [gd_scene load_steps=101 format=3 uid="uid://bplldbrxxosix"]
 
-[ext_resource type="Script" uid="uid://k81rdtt3hcp7" path="res://scripts/player/base/playerstatemachine.gd" id="1_6v1g7"]
+[ext_resource type="Script" uid="uid://k81rdtt3hcp7" path="res://scripts/player/base/Player.gd" id="1_6v1g7"]
 [ext_resource type="Texture2D" uid="uid://d3oeordn0ki4q" path="res://textures/sprites/player/player_spritesheet_2.png" id="2_ljuf7"]
 [ext_resource type="Texture2D" uid="uid://dt0hfswe3g61s" path="res://textures/player/attack/ghost attack shash_0001.png" id="2_u6omy"]
 [ext_resource type="Texture2D" uid="uid://cx6fvmeny4uag" path="res://textures/player/attack/ghost attack shash_0002.png" id="3_0ela0"]

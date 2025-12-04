@@ -17,7 +17,11 @@ var is_visible_state: bool = false
 func _ready() -> void:
 	modulate.a = 0
 	is_visible_state = false
-	print("💰 CurrencyHUD inicializado (esperando jugador...)")
+	
+	# 🎯 CONECTAR A EVENTBUS
+	EventBus.currency_collected.connect(_on_currency_collected_event)
+	
+	print("💰 CurrencyHUD inicializado")
 
 # ============================================
 # 🆕 CONECTAR CON JUGADOR
@@ -35,17 +39,25 @@ func connect_to_player(player: Player) -> void:
 		push_warning("⚠️ Player no tiene Wallet component")
 		return
 	
-	# Conectar señales
-	if not wallet.currency_added.is_connected(_on_currency_added):
-		wallet.currency_added.connect(_on_currency_added)
-	if not wallet.currency_spent.is_connected(_on_currency_spent):
-		wallet.currency_spent.connect(_on_currency_spent)
+	# 🎯 SOLO CONECTAR currency_changed PARA ACTUALIZAR DISPLAY
 	if not wallet.currency_changed.is_connected(_on_currency_changed):
 		wallet.currency_changed.connect(_on_currency_changed)
 	
 	_update_display()
 	
 	print("✅ CurrencyHUD conectado al jugador")
+
+# 🎯 LISTENER DE EVENTBUS
+func _on_currency_collected_event(amount: int, collector: Node) -> void:
+	# Solo mostrar si el collector es el player actual
+	if collector != current_player:
+		return
+	
+	print("💰 CurrencyHUD: +", amount, " Asteriones detectado")
+	
+	_show_hud()
+	fade_timer = fade_delay
+	is_fading = false
 
 func _process(delta: float) -> void:
 	if not is_visible_state:
@@ -60,20 +72,6 @@ func _process(delta: float) -> void:
 # ============================================
 # CALLBACKS
 # ============================================
-
-func _on_currency_added(amount: int) -> void:
-	print("💰 CurrencyHUD: +", amount, " Asteriones detectado")
-	
-	_show_hud()
-	fade_timer = fade_delay
-	is_fading = false
-	_update_display()
-
-func _on_currency_spent(_amount: int) -> void:
-	_show_hud()
-	fade_timer = fade_delay
-	is_fading = false
-	_update_display()
 
 func _on_currency_changed(new_amount: int) -> void:
 	current_amount = new_amount

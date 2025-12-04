@@ -17,8 +17,19 @@ func _ready() -> void:
 		push_error("Wallet debe ser hijo de un Player")
 		return
 	
+	# 🎯 CONECTAR A EVENTBUS
+	EventBus.currency_collected.connect(_on_currency_collected)
+	
 	print("💰 Wallet inicializado")
 	print_wallet()
+
+# 🎯 LISTENER DE EVENTBUS
+func _on_currency_collected(amount: int, collector: Node) -> void:
+	# Solo procesar si el collector es este player
+	if collector != player:
+		return
+	
+	add_asteriones(amount)
 
 # ============================================
 # 🔧 AÑADIR ASTERIONES (SIMPLIFICADO)

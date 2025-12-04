@@ -95,6 +95,9 @@ func _on_attack_hitbox_body_entered(body: Node2D) -> void:
 	var final_damage = damage_result["damage"]
 	var is_critical = damage_result["is_critical"]
 	
+	# 🎯 EMITIR EVENTO DE ATAQUE
+	EventBus.enemy_attacked.emit(final_damage, body, player)
+	
 	# Aplicar daño
 	var knockback = _calculate_knockback(body)
 	body.take_damage(final_damage, knockback)

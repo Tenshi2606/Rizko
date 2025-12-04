@@ -77,7 +77,6 @@ sources/1 = SubResource("TileSetAtlasSource_67gf1")
 light_mode = 2
 
 [node name="Catatumba" type="Node2D"]
-position = Vector2(1, 0)
 
 [node name="Decoration" type="TileMapLayer" parent="."]
 position = Vector2(0, 1)

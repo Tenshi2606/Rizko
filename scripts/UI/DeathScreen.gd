@@ -23,6 +23,9 @@ func _ready() -> void:
 	if not is_in_group("death_screen"):
 		add_to_group("death_screen")
 	
+	# 🎯 CONECTAR A EVENTBUS
+	EventBus.player_died.connect(_on_player_died)
+	
 	# Conectar botones
 	if retry_button:
 		retry_button.pressed.connect(_on_retry_pressed)
@@ -41,6 +44,10 @@ func _ready() -> void:
 	print("  - Visible: ", visible)
 	print("  - Modulate Alpha: ", modulate.a)
 	print("  - Mouse Filter: ", mouse_filter)
+
+# 🎯 LISTENER DE EVENTBUS
+func _on_player_died() -> void:
+	show_death_screen()
 
 func show_death_screen(checkpoint: String = "default") -> void:
 	print("💀 show_death_screen() LLAMADO")

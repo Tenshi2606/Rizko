@@ -127,6 +127,9 @@ func die() -> void:
 	if not respawns:
 		SceneManager.register_enemy_killed(enemy_id)
 	
+	# 🎯 EMITIR EVENTO DE MUERTE
+	EventBus.enemy_killed.emit(self, null)  # killer se puede agregar después
+	
 	enemy_died.emit()
 	_on_die()
 	queue_free()

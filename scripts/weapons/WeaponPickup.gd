@@ -117,7 +117,11 @@ func _absorb_weapon() -> void:
 	weapon_system.unlock_weapon(weapon_data, true)
 	
 	# Equipar automáticamente
+	var old_weapon = weapon_system.current_weapon
 	weapon_system.equip_weapon(weapon_data)
+	
+	# 🎯 EMITIR EVENTO
+	EventBus.weapon_changed.emit(old_weapon, weapon_data)
 	
 	# Efecto visual de absorción
 	_play_absorption_effect()

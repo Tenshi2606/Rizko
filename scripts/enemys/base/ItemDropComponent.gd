@@ -210,6 +210,9 @@ func _spawn_drop(item: Item, spawn_position: Vector2) -> void:
 			var level = get_tree().current_scene
 			level.call_deferred("add_child", drop_instance)
 			
+			# 🎯 EMITIR EVENTO
+			EventBus.item_dropped.emit(coin_currency, spawn_position + spread)
+			
 			# Todas las monedas aparecen a la vez (sin delay)
 	
 	# Items normales y almas (spawn único)
@@ -240,6 +243,9 @@ func _spawn_drop(item: Item, spawn_position: Vector2) -> void:
 			)
 		
 		drop_instance.angular_velocity = randf_range(-3, 3)
+		
+		# 🎯 EMITIR EVENTO
+		EventBus.item_dropped.emit(item, spawn_position)
 
 # 🆕 Calcular cuántas monedas visuales spawnear según la cantidad
 func _calculate_coin_count(amount: int) -> int:
