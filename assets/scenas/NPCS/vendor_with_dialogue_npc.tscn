@@ -1,0 +1,65 @@
+[gd_scene load_steps=10 format=3 uid="uid://cojdkn087i3h8"]
+
+[ext_resource type="Script" uid="uid://x5w22uq1253f" path="res://scripts/NPCS/VendorWithDialogue/VendorWithDialogue.gd" id="1_ue6f4"]
+[ext_resource type="Texture2D" uid="uid://4vyjn3wnlpj5" path="res://textures/enemys/fungus/run/enemy red_0001.png" id="2_lt3eo"]
+[ext_resource type="Texture2D" uid="uid://caygalnvfgc6p" path="res://textures/enemys/fungus/run/enemy red_0002.png" id="3_e4lu0"]
+[ext_resource type="Texture2D" uid="uid://brfx64uk1dqph" path="res://textures/enemys/fungus/run/enemy red_0003.png" id="4_18gsv"]
+[ext_resource type="Texture2D" uid="uid://bb0xttsx2qpcb" path="res://textures/enemys/fungus/run/enemy red_0004.png" id="5_2sm5e"]
+[ext_resource type="Texture2D" uid="uid://p8c4o32eqcx5" path="res://textures/enemys/fungus/run/enemy red_0005.png" id="6_13htd"]
+[ext_resource type="Texture2D" uid="uid://bbjurukdjte2r" path="res://textures/enemys/fungus/run/enemy red_0006.png" id="7_g40gu"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_luy6t"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8jism"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_lt3eo")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_e4lu0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_18gsv")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_2sm5e")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_13htd")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_g40gu")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[node name="ShopNPC" type="Area2D"]
+collision_layer = 5
+collision_mask = 5
+script = ExtResource("1_ue6f4")
+first_time_dialogue = Array[String](["jajaja", "¡Hola viajero!", "Soy el mercader de esta zona.", "Echa un vistazo a mis productos", "Comes algo hoy?"])
+show_dialogue_every_time = true
+shop_inventory = Array[String](["health_potion:5", "soul_basic:5"])
+buys_items = true
+npc_name = "Juancito"
+interaction_prompt = "Tocar"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_luy6t")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_8jism")
+animation = &"idle"
+frame_progress = 0.0036669306
+
+[node name="PromptLabel" type="Label" parent="."]
+offset_left = -87.0
+offset_top = -36.0
+offset_right = 93.0
+offset_bottom = -13.0
+text = "Tocar"
+horizontal_alignment = 1
+metadata/_edit_use_anchors_ = true

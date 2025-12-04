@@ -1,0 +1,52 @@
+[gd_scene load_steps=10 format=3 uid="uid://bewtr1phvshqh"]
+
+[ext_resource type="Script" uid="uid://cnn8jotve81h7" path="res://scripts/core/GameManager.gd" id="1_idct0"]
+[ext_resource type="PackedScene" uid="uid://bmkfkcsxjo6k5" path="res://assets/scenas/UI/currency_hud.tscn" id="2_bo68k"]
+[ext_resource type="PackedScene" uid="uid://ct18x5kgqa0n7" path="res://assets/scenas/UI/dialogue_ui.tscn" id="3_p1odx"]
+[ext_resource type="PackedScene" uid="uid://dp3tn3cxptpe3" path="res://assets/scenas/UI/heal_cooldown_hud.tscn" id="4_pqwio"]
+[ext_resource type="PackedScene" uid="uid://dgfsq00k7b3bm" path="res://assets/scenas/UI/inventory_ui.tscn" id="5_emche"]
+[ext_resource type="PackedScene" uid="uid://dnwnias8t" path="res://assets/scenas/UI/shop_ui.tscn" id="6_jnfxw"]
+[ext_resource type="PackedScene" uid="uid://3pavulhndqjd" path="res://assets/scenas/UI/weapon_hud.tscn" id="7_4wmur"]
+[ext_resource type="PackedScene" uid="uid://b6x0k2w5hsppf" path="res://assets/scenas/UI/death_screen.tscn" id="8_bo68k"]
+[ext_resource type="PackedScene" uid="uid://b5q0t81s4h5l7" path="res://assets/scenas/UI/pause_menu.tscn" id="9_p1odx"]
+
+[node name="PersistentUi" type="CanvasLayer"]
+script = ExtResource("1_idct0")
+
+[node name="InventoryUI" parent="." instance=ExtResource("5_emche")]
+offset_left = 78.0
+offset_top = 43.0
+offset_right = 78.0
+offset_bottom = 43.0
+
+[node name="WeaponHUD" parent="." instance=ExtResource("7_4wmur")]
+offset_left = 811.0
+offset_top = -28.0
+offset_right = 911.0
+offset_bottom = 72.0
+
+[node name="CurrencyHUD" parent="." instance=ExtResource("2_bo68k")]
+offset_top = 92.0
+offset_bottom = 132.0
+
+[node name="HealCooldownHUD" parent="." instance=ExtResource("4_pqwio")]
+offset_left = 772.0
+offset_top = 12.0
+offset_right = 772.0
+offset_bottom = 12.0
+
+[node name="ShopUI" parent="." instance=ExtResource("6_jnfxw")]
+offset_left = -298.0
+offset_top = -275.0
+offset_right = -298.0
+offset_bottom = -275.0
+
+[node name="DeathScreen" parent="." instance=ExtResource("8_bo68k")]
+offset_left = 497.0
+offset_top = 265.0
+offset_right = -506.0
+offset_bottom = -266.0
+
+[node name="DialogueUI" parent="." instance=ExtResource("3_p1odx")]
+
+[node name="PauseMenu" parent="." instance=ExtResource("9_p1odx")]

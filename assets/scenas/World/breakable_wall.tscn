@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://b151gllpejvsj"]
+
+[ext_resource type="Script" uid="uid://d1y3qvees6fbd" path="res://scripts/world/BreakableWall.gd" id="1_2qskv"]
+[ext_resource type="Texture2D" uid="uid://c0jr5nvxji1s5" path="res://textures/Temp/Tileset/DeepCaveTile.png" id="2_vekyk"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sxskt"]
+size = Vector2(20, 64)
+
+[node name="BreakableWall" type="StaticBody2D"]
+collision_layer = 6
+collision_mask = 6
+script = ExtResource("1_2qskv")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_vekyk")
+region_enabled = true
+region_rect = Rect2(0, 64, 32, 64)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(6, 0)
+shape = SubResource("RectangleShape2D_sxskt")

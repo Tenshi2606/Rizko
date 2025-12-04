@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://cacti4mmmr5q6"]
+
+[ext_resource type="Script" uid="uid://c30boi5rg7vs7" path="res://scripts/world/SpiritualTree.gd" id="1_4ryrq"]
+[ext_resource type="Texture2D" uid="uid://cedc110sag7f8" path="res://textures/player/jump/jump_0004.png" id="2_q28cb"]
+[ext_resource type="Texture2D" uid="uid://cw1emp5f40bxn" path="res://textures/player/jump/jump_0002.png" id="3_eb5bo"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_chc1d"]
+
+[node name="SpiritualTree" type="Node2D"]
+script = ExtResource("1_4ryrq")
+show_confirmation = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_q28cb")
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_layer = 5
+collision_mask = 5
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("CircleShape2D_chc1d")
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
+color = Color(1, 1, 0.3647059, 1)
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+texture = ExtResource("3_eb5bo")
+
+[node name="PromptLabel" type="Label" parent="."]
+offset_left = -18.0
+offset_top = -34.0
+offset_right = 22.0
+offset_bottom = -11.0

@@ -1,0 +1,90 @@
+[gd_scene load_steps=13 format=3 uid="uid://cwl7drmfbp2xp"]
+
+[ext_resource type="Script" uid="uid://c74yxe5hi4501" path="res://scripts/items/base/ItemPickup.gd" id="1_blsqe"]
+[ext_resource type="Script" uid="uid://8b20ieetxncp" path="res://scripts/items/comsumibles/SoulFragment.gd" id="2_fgcbm"]
+[ext_resource type="Texture2D" uid="uid://c2pdi84jrk80y" path="res://textures/items/Souls/Soul1.png" id="3_fyk7n"]
+[ext_resource type="Texture2D" uid="uid://b0dfdokd4edq4" path="res://textures/items/Souls/Soul3.png" id="4_5atso"]
+[ext_resource type="Texture2D" uid="uid://bmd7mfem12c0s" path="res://textures/items/Souls/Soul2.png" id="5_10esi"]
+[ext_resource type="Texture2D" uid="uid://cp61ij2whnmbf" path="res://textures/Temp/player.tres" id="6_y4dcn"]
+
+[sub_resource type="Shader" id="Shader_blsqe"]
+code = "// res://shaders/soul_gold.gdshader
+shader_type canvas_item;
+uniform vec4 glow_color : source_color = vec4(1.0, 0.9, 0.3, 1.0);
+uniform float glow_intensity : hint_range(0.0, 2.0) = 1.0;
+uniform float pulse_speed : hint_range(0.0, 10.0) = 2.0;
+void fragment() {
+    vec4 tex = texture(TEXTURE, UV);
+    
+    // Pulso de brillo
+    float pulse = sin(TIME * pulse_speed) * 0.5 + 0.5;
+    
+    // Aplicar brillo dorado
+    vec3 glow = glow_color.rgb * glow_intensity * pulse;
+    
+    COLOR = vec4(tex.rgb + glow, tex.a);
+}"
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fgcbm"]
+shader = SubResource("Shader_blsqe")
+shader_parameter/glow_color = Color(1, 0.9, 0.3, 1)
+shader_parameter/glow_intensity = 1.0
+shader_parameter/pulse_speed = 2.0
+
+[sub_resource type="Resource" id="Resource_vfqon"]
+script = ExtResource("2_fgcbm")
+metadata/_custom_type_script = "uid://8b20ieetxncp"
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_fgcbm"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_fyk7n")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_10esi")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_5atso")
+}],
+"loop": true,
+"name": &"soul",
+"speed": 10.0
+}]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_blsqe"]
+radius = 3.0
+height = 12.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_42drm"]
+radius = 5.0
+
+[node name="soul_pickup" type="RigidBody2D"]
+material = SubResource("ShaderMaterial_fgcbm")
+collision_layer = 8
+script = ExtResource("1_blsqe")
+item = SubResource("Resource_vfqon")
+quantity = 10
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.108, 0.1)
+sprite_frames = SubResource("SpriteFrames_fgcbm")
+animation = &"soul"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
+shape = SubResource("CapsuleShape2D_blsqe")
+
+[node name="DetectionArea" type="Area2D" parent="."]
+visible = false
+collision_mask = 12
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_42drm")
+debug_color = Color(0.869206, 0.00052269996, 0.8536111, 0.41960785)
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+position = Vector2(1, -5)
+color = Color(0.69965345, 0.69965345, 0.69965345, 1)
+shadow_enabled = true
+texture = ExtResource("6_y4dcn")

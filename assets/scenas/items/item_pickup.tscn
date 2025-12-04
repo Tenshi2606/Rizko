@@ -1,0 +1,43 @@
+[gd_scene load_steps=8 format=3 uid="uid://bymqdd1e6qaey"]
+
+[ext_resource type="Script" uid="uid://c74yxe5hi4501" path="res://scripts/items/base/ItemPickup.gd" id="1_heer2"]
+[ext_resource type="Script" uid="uid://8b20ieetxncp" path="res://scripts/items/comsumibles/SoulFragment.gd" id="2_vsn7u"]
+[ext_resource type="Texture2D" uid="uid://cp61ij2whnmbf" path="res://textures/Temp/player.tres" id="6_6k8pr"]
+
+[sub_resource type="Resource" id="Resource_vfqon"]
+script = ExtResource("2_vsn7u")
+metadata/_custom_type_script = "uid://8b20ieetxncp"
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ls03q"]
+animations = []
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_53i1c"]
+radius = 4.5
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_42drm"]
+radius = 5.0
+
+[node name="ItemPickup" type="RigidBody2D"]
+collision_layer = 8
+script = ExtResource("1_heer2")
+item = SubResource("Resource_vfqon")
+quantity = 10
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+scale = Vector2(0.108, 0.1)
+sprite_frames = SubResource("SpriteFrames_ls03q")
+animation = &""
+
+[node name="PointLight2D" type="PointLight2D" parent="."]
+color = Color(0.69965345, 0.69965345, 0.69965345, 1)
+texture = ExtResource("6_6k8pr")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_53i1c")
+
+[node name="DetectionArea" type="Area2D" parent="."]
+collision_mask = 12
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_42drm")
+debug_color = Color(0.869206, 0.00052269996, 0.8536111, 0.41960785)

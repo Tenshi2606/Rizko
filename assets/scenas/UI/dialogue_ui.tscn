@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3 uid="uid://ct18x5kgqa0n7"]
+
+[ext_resource type="Script" uid="uid://b7dbn10thfrfc" path="res://scripts/UI/DialogueUI.gd" id="1_y0gsi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y0gsi"]
+bg_color = Color(0, 0, 0, 0.25882354)
+
+[node name="DialogueUI" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 195.0
+offset_top = 1230.0
+offset_right = 395.0
+offset_bottom = 1280.0
+script = ExtResource("1_y0gsi")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -176.0
+offset_top = -848.0
+offset_right = 724.0
+offset_bottom = -648.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_y0gsi")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="SpeakerLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "NPC"
+
+[node name="DialogueLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Texto del diálogo aquí..."
+
+[node name="ContinuePrompt" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "▼ Presiona E para continuar"

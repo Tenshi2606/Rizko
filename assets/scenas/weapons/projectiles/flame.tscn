@@ -1,0 +1,20 @@
+[gd_scene load_steps=4 format=3 uid="uid://eekb787gm3gm"]
+
+[ext_resource type="Texture2D" uid="uid://d0jlbelm653ia" path="res://textures/enemys/fungus/idel/enemy red_0001.png" id="1_4u22c"]
+[ext_resource type="Script" uid="uid://bbvsgph5gyyn0" path="res://scripts/weapons/projectiles/Flame.gd" id="1_7orqh"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_7orqh"]
+radius = 8.0
+
+[node name="Flame" type="Area2D"]
+collision_layer = 7
+collision_mask = 7
+script = ExtResource("1_7orqh")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_7orqh")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-2.3841858e-07, -2.9999995)
+scale = Vector2(0.6875, 0.59375)
+texture = ExtResource("1_4u22c")

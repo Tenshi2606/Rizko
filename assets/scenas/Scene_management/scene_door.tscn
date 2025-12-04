@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://bomr7tlkqju4w"]
+
+[ext_resource type="Script" uid="uid://cur0mxs0j3x0u" path="res://scripts/scene_management/SceneDoor.gd" id="1_w710y"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_waluq"]
+size = Vector2(32, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_w710y"]
+
+[node name="SceneDoor" type="Area2D"]
+collision_layer = 5
+collision_mask = 5
+script = ExtResource("1_w710y")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_waluq")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_w710y")
+
+[node name="PromptLabel" type="Label" parent="."]
+offset_left = -82.0
+offset_top = -56.0
+offset_right = 90.0
+offset_bottom = -33.0
+text = "Presiona ↑ para entrar"
+horizontal_alignment = 1

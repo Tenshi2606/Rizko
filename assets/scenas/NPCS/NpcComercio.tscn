@@ -1,0 +1,60 @@
+[gd_scene load_steps=10 format=3 uid="uid://br78gbf5oioyg"]
+
+[ext_resource type="Script" uid="uid://b7svlk3wnphk8" path="res://scripts/NPCS/Vendedor/Vendedor.gd" id="1_s2xry"]
+[ext_resource type="Texture2D" uid="uid://4vyjn3wnlpj5" path="res://textures/enemys/fungus/run/enemy red_0001.png" id="2_vo1qt"]
+[ext_resource type="Texture2D" uid="uid://caygalnvfgc6p" path="res://textures/enemys/fungus/run/enemy red_0002.png" id="3_5j6sx"]
+[ext_resource type="Texture2D" uid="uid://brfx64uk1dqph" path="res://textures/enemys/fungus/run/enemy red_0003.png" id="4_qf44v"]
+[ext_resource type="Texture2D" uid="uid://bb0xttsx2qpcb" path="res://textures/enemys/fungus/run/enemy red_0004.png" id="5_sx8a6"]
+[ext_resource type="Texture2D" uid="uid://p8c4o32eqcx5" path="res://textures/enemys/fungus/run/enemy red_0005.png" id="6_vikaf"]
+[ext_resource type="Texture2D" uid="uid://bbjurukdjte2r" path="res://textures/enemys/fungus/run/enemy red_0006.png" id="7_hmqyp"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_luy6t"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8jism"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_vo1qt")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_5j6sx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_qf44v")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_sx8a6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_vikaf")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_hmqyp")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}]
+
+[node name="ShopNPC" type="Area2D"]
+collision_layer = 5
+collision_mask = 5
+script = ExtResource("1_s2xry")
+buys_items = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_luy6t")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_8jism")
+animation = &"idle"
+frame_progress = 0.0036669306
+
+[node name="PromptLabel" type="Label" parent="."]
+offset_left = -87.0
+offset_top = -36.0
+offset_right = 93.0
+offset_bottom = -13.0
+text = "Tocar"
+horizontal_alignment = 1
+metadata/_edit_use_anchors_ = true

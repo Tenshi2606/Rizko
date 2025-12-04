@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3 uid="uid://busfgo41r7l2h"]
+
+[ext_resource type="PackedScene" uid="uid://bmkfkcsxjo6k5" path="res://assets/scenas/UI/currency_hud.tscn" id="1_naqlu"]
+[ext_resource type="PackedScene" uid="uid://3pavulhndqjd" path="res://assets/scenas/UI/weapon_hud.tscn" id="2_dupj3"]
+[ext_resource type="PackedScene" uid="uid://dp3tn3cxptpe3" path="res://assets/scenas/UI/heal_cooldown_hud.tscn" id="3_begfn"]
+
+[node name="HealthBar" type="ProgressBar"]
+offset_right = 278.0
+offset_bottom = 43.0
+max_value = 5.0
+value = 5.0
+
+[node name="CurrencyHUD" parent="." instance=ExtResource("1_naqlu")]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 76.0
+offset_right = 48.0
+offset_bottom = 116.0
+
+[node name="WeaponHUD" parent="." instance=ExtResource("2_dupj3")]
+layout_mode = 0
+offset_left = 801.0
+offset_top = -25.0
+offset_right = 901.0
+offset_bottom = 75.0
+
+[node name="HealCooldownHUD" parent="." instance=ExtResource("3_begfn")]
+layout_mode = 1
+offset_left = 783.0
+offset_top = 9.0
+offset_right = 905.0
+offset_bottom = 366.0

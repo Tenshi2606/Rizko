@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3 uid="uid://b6x0k2w5hsppf"]
+
+[ext_resource type="Script" uid="uid://cdfq4mv4ebet7" path="res://scripts/UI/DeathScreen.gd" id="1_i0lab"]
+
+[node name="DeathScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_i0lab")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 0
+offset_right = 138.0
+offset_bottom = 110.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="MessageLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Has muerto"
+horizontal_alignment = 1
+
+[node name="RetryButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Reintentar"
+
+[node name="MenuButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Menú Principal"

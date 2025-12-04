@@ -1,0 +1,78 @@
+[gd_scene load_steps=12 format=3 uid="uid://bu3k1080xxuum"]
+
+[ext_resource type="Script" uid="uid://eoru7ho7cppb" path="res://scripts/enemys/fungusIA.gd" id="1_3tndo"]
+[ext_resource type="Texture2D" uid="uid://d0jlbelm653ia" path="res://textures/enemys/fungus/idel/enemy red_0001.png" id="2_w5t6w"]
+[ext_resource type="Texture2D" uid="uid://4vyjn3wnlpj5" path="res://textures/enemys/fungus/run/enemy red_0001.png" id="3_q68i0"]
+[ext_resource type="Texture2D" uid="uid://caygalnvfgc6p" path="res://textures/enemys/fungus/run/enemy red_0002.png" id="4_r1e2i"]
+[ext_resource type="Texture2D" uid="uid://brfx64uk1dqph" path="res://textures/enemys/fungus/run/enemy red_0003.png" id="5_nm1am"]
+[ext_resource type="Texture2D" uid="uid://bb0xttsx2qpcb" path="res://textures/enemys/fungus/run/enemy red_0004.png" id="6_gtx5f"]
+[ext_resource type="Texture2D" uid="uid://p8c4o32eqcx5" path="res://textures/enemys/fungus/run/enemy red_0005.png" id="7_7tyod"]
+[ext_resource type="Texture2D" uid="uid://bbjurukdjte2r" path="res://textures/enemys/fungus/run/enemy red_0006.png" id="8_ft2cv"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ljdoj"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_w5t6w")
+}],
+"loop": true,
+"name": &"idel",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_q68i0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_r1e2i")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_nm1am")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_gtx5f")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_7tyod")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_ft2cv")
+}],
+"loop": true,
+"name": &"run",
+"speed": 10.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_aikpg"]
+size = Vector2(4, 17)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_3tndo"]
+radius = 7.1589108
+
+[node name="Enemy Fungus" type="Node2D" groups=["Enemy"]]
+
+[node name="Fungus" type="CharacterBody2D" parent="." groups=["Enemy"]]
+script = ExtResource("1_3tndo")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Fungus"]
+sprite_frames = SubResource("SpriteFrames_ljdoj")
+animation = &"idel"
+frame_progress = 0.32559845
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fungus"]
+position = Vector2(0, 4.5)
+shape = SubResource("RectangleShape2D_aikpg")
+
+[node name="GroundCheck" type="RayCast2D" parent="Fungus"]
+target_position = Vector2(12, 24)
+
+[node name="WallCheck" type="RayCast2D" parent="Fungus"]
+target_position = Vector2(10, 0)
+
+[node name="Hitbox" type="Area2D" parent="Fungus"]
+collision_layer = 2
+collision_mask = 3
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Fungus/Hitbox"]
+position = Vector2(0, 2)
+shape = SubResource("CircleShape2D_3tndo")

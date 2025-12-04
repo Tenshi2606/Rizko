@@ -1,0 +1,36 @@
+[gd_scene load_steps=4 format=3 uid="uid://c8cap61uptw1f"]
+
+[ext_resource type="Script" uid="uid://dpxxbgkg0xuyg" path="res://scripts/world/Checkpoint.gd" id="1_0odxs"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_4n7y7"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1cqwu"]
+animations = [{
+"frames": [],
+"loop": true,
+"name": &"active",
+"speed": 5.0
+}, {
+"frames": [],
+"loop": true,
+"name": &"inactive",
+"speed": 5.0
+}]
+
+[node name="Checkpoint" type="Area2D"]
+collision_layer = 4
+collision_mask = 4
+script = ExtResource("1_0odxs")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_4n7y7")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_1cqwu")
+animation = &"active"
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
+
+[node name="ActivationLabel" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0

@@ -1,0 +1,64 @@
+[gd_scene load_steps=3 format=3 uid="uid://dnwnias8t"]
+
+[ext_resource type="Script" uid="uid://bpijbrdgnwbkg" path="res://scripts/UI/ShopUI.gd" id="1_66e3q"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fedn6"]
+bg_color = Color(0.003921569, 0.003921569, 0.05882353, 0.45490196)
+
+[node name="ShopUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -567.0
+offset_top = -289.0
+offset_right = -567.0
+offset_bottom = -289.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_66e3q")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_right = 500.0
+offset_bottom = 600.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_fedn6")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.54808444, 0.54387975, 0, 1)
+theme_override_font_sizes/font_size = 24
+text = "🏪 TIENDA"
+horizontal_alignment = 1
+
+[node name="GreetingLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Bienvenido"
+
+[node name="WalletDisplay" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5572155, 0.5556251, 0, 1)
+text = "💰 Tienes: 0 Asteriones"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="ItemsList" type="VBoxContainer" parent="Panel/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="Panel/VBoxContainer/ScrollContainer"]
+layout_mode = 2

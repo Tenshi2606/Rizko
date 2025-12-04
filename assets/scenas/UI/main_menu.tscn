@@ -1,0 +1,74 @@
+[gd_scene load_steps=2 format=3 uid="uid://ba5d8t0ppc8o1"]
+
+[ext_resource type="Script" uid="uid://dutqt8b4vd77c" path="res://scripts/UI/MainMenu.gd" id="1_1ay6j"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1ay6j")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 0
+offset_right = 1156.0
+offset_bottom = 643.0
+color = Color(0.003921569, 0.003921569, 0.05882353, 0.56078434)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 100
+theme_override_constants/margin_top = 100
+theme_override_constants/margin_right = 80
+theme_override_constants/margin_bottom = 100
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.81812185, 0.86769885, 0.78274935, 1)
+theme_override_font_sizes/font_size = 48
+text = "Rizko"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="NewGameButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "NUEVA PARTIDA"
+
+[node name="ContinueButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "CONTINUAR"
+
+[node name="OptionsButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "OPCIONES"
+
+[node name="QuitButton" type="Button" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "SALIR"
+
+[node name="Spacer2" type="Control" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2

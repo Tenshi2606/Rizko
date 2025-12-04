@@ -1,0 +1,42 @@
+[gd_scene load_steps=3 format=3 uid="uid://3pavulhndqjd"]
+
+[ext_resource type="Script" uid="uid://b8mwm4axfaere" path="res://scripts/UI/WeaponHUD.gd" id="1_or5s7"]
+[ext_resource type="Texture2D" uid="uid://d0jlbelm653ia" path="res://textures/enemys/fungus/idel/enemy red_0001.png" id="2_vm6ks"]
+
+[node name="WeaponHUD" type="Control"]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 3
+anchors_preset = 0
+offset_left = -142.0
+offset_top = -32.0
+offset_right = -42.0
+offset_bottom = 68.0
+script = ExtResource("1_or5s7")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 178.0
+offset_top = 42.0
+offset_right = 320.0
+offset_bottom = 123.0
+
+[node name="WeaponNameLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Guaraña Espectral"
+
+[node name="AmmoLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "💥 3 / 3"
+
+[node name="ReloadProgress" type="ProgressBar" parent="VBoxContainer"]
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="WeaponIcon" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = 144.0
+offset_top = 30.0
+offset_right = 176.0
+offset_bottom = 62.0
+texture = ExtResource("2_vm6ks")

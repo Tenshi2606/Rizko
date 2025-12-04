@@ -1,0 +1,136 @@
+[gd_scene load_steps=17 format=3 uid="uid://bdakreq5c6uav"]
+
+[ext_resource type="Script" uid="uid://dqve10d0laoxp" path="res://scripts/enemys/FlyingEnemy.gd" id="1_78gbu"]
+[ext_resource type="Texture2D" uid="uid://dt0hfswe3g61s" path="res://textures/player/attack/ghost attack shash_0001.png" id="2_12y8b"]
+[ext_resource type="Texture2D" uid="uid://dfgym6jihvdue" path="res://textures/player/idlel/ghost idel.png" id="2_py1yf"]
+[ext_resource type="Texture2D" uid="uid://cx6fvmeny4uag" path="res://textures/player/attack/ghost attack shash_0002.png" id="3_mrln4"]
+[ext_resource type="Script" uid="uid://dqd3n57pxl0ic" path="res://scripts/enemys/base/ItemDropComponent.gd" id="3_prck0"]
+[ext_resource type="Texture2D" uid="uid://borg0g66sorbf" path="res://textures/player/attack/ghost attack shash_0003.png" id="4_6er1c"]
+[ext_resource type="Script" uid="uid://yy0omr2nb35b" path="res://scripts/enemys/base/DOTComponent.gd" id="4_7ba4d"]
+[ext_resource type="Texture2D" uid="uid://otxcf4ulwuib" path="res://textures/player/attack/ghost attack shash_0004.png" id="5_y41f3"]
+[ext_resource type="Texture2D" uid="uid://ddn1jtsdk7j1e" path="res://textures/player/attack/ghost attack shash_0005.png" id="6_lo6cg"]
+[ext_resource type="Texture2D" uid="uid://nomhxswxvn2g" path="res://textures/player/attack/ghost attack shash_0006.png" id="7_ncffr"]
+[ext_resource type="Texture2D" uid="uid://to7wjun8jstd" path="res://textures/player/jump/jump_0008.png" id="8_pi4wd"]
+[ext_resource type="Texture2D" uid="uid://de42h8uuhp1iy" path="res://textures/player/jump/jump_0005.png" id="9_jpcq6"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_78gbu"]
+radius = 6.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_prck0"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_12y8b")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_mrln4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_6er1c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_y41f3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_lo6cg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_ncffr")
+}],
+"loop": true,
+"name": &"charging",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_mrln4")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_6er1c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_y41f3")
+}],
+"loop": true,
+"name": &"chase",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("8_pi4wd")
+}],
+"loop": true,
+"name": &"death",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("9_jpcq6")
+}],
+"loop": true,
+"name": &"hit",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_py1yf")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_py1yf")
+}],
+"loop": true,
+"name": &"prepare_charge",
+"speed": 5.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_7ba4d"]
+radius = 7.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ddylo"]
+radius = 70.0
+
+[node name="FlyingEnemy" type="CharacterBody2D" groups=["Enemy"]]
+collision_layer = 2
+collision_mask = 6
+script = ExtResource("1_78gbu")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 1)
+shape = SubResource("CircleShape2D_78gbu")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_prck0")
+animation = &"death"
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 6
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+position = Vector2(0, 1)
+shape = SubResource("CircleShape2D_7ba4d")
+debug_color = Color(0.8201729, 0.0018010527, 0.96730965, 0.41960785)
+
+[node name="DetectionArea" type="Area2D" parent="."]
+collision_layer = 4
+collision_mask = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DetectionArea"]
+shape = SubResource("CircleShape2D_ddylo")
+debug_color = Color(0.99195915, 0, 0.26480663, 0.41960785)
+
+[node name="ItemDropComponent" type="Node" parent="."]
+script = ExtResource("3_prck0")
+drop_chance = 0.2
+min_currency = 2
+max_currency = 6
+drop_item_ids = Array[String](["soul_basic", "soul_intermediate", "soul_pure"])
+drop_weights = Array[int]([25, 2, 1])
+
+[node name="DOTComponent" type="Node" parent="."]
+script = ExtResource("4_7ba4d")

@@ -1,0 +1,91 @@
+[gd_scene load_steps=4 format=3 uid="uid://b5q0t81s4h5l7"]
+
+[ext_resource type="Script" uid="uid://cgo7t6nikidgw" path="res://scripts/UI/PauseMenu.gd" id="1_0axhh"]
+[ext_resource type="StyleBox" uid="uid://b401irur22ern" path="res://assets/themes/inventory_ui.tres" id="2_s6f5e"]
+[ext_resource type="StyleBox" uid="uid://b3mroj5oj2hm1" path="res://assets/themes/buttons.tres" id="3_8sqf2"]
+
+[node name="PauseMenu" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0axhh")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7058824)
+
+[node name="Panel" type="Panel" parent="."]
+custom_minimum_size = Vector2(400, 500)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("2_s6f5e")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88235295, 0.88235295, 0.88235295, 1)
+theme_override_font_sizes/font_size = 32
+text = "PAUSA"
+horizontal_alignment = 1
+
+[node name="ResumeButton" type="Button" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("3_8sqf2")
+text = "Reanudar"
+
+[node name="SaveButton" type="Button" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("3_8sqf2")
+text = "Guardar Partida"
+
+[node name="RestartCheckpointButton" type="Button" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("3_8sqf2")
+text = "Reiniciar desde Checkpoint"
+
+[node name="OptionsButton" type="Button" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("3_8sqf2")
+text = "Opciones"
+
+[node name="MenuButton" type="Button" parent="Panel/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("3_8sqf2")
+text = "Menú Principal"

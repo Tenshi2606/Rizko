@@ -1,0 +1,36 @@
+[gd_scene load_steps=5 format=3 uid="uid://dw2s76bbtlc52"]
+
+[ext_resource type="Script" uid="uid://dontk62ta5qp0" path="res://scripts/world/AbilityUnlocker.gd" id="1_lrxfr"]
+[ext_resource type="Texture2D" uid="uid://borg0g66sorbf" path="res://textures/player/attack/ghost attack shash_0003.png" id="2_fp12l"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_udprp"]
+radius = 30.0
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_caq07"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_fp12l")
+}],
+"loop": true,
+"name": &"unlock",
+"speed": 5.0
+}]
+
+[node name="AbilityUnlocker" type="Area2D"]
+collision_layer = 5
+collision_mask = 5
+script = ExtResource("1_lrxfr")
+ability_id = "critical_hit"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_udprp")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 22)
+sprite_frames = SubResource("SpriteFrames_caq07")
+animation = &"unlock"
+
+[node name="Label" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0

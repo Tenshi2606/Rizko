@@ -1,0 +1,39 @@
+[gd_scene load_steps=5 format=3 uid="uid://c6qvij4w1qj2x"]
+
+[ext_resource type="Script" uid="uid://bs85jtvf47ibk" path="res://scripts/weapons/WeaponPickup.gd" id="1_fhwd8"]
+[ext_resource type="Texture2D" uid="uid://dpib1ltwdyntc" path="res://textures/player/UI/complet/healt bar complet.png" id="2_ejx18"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_shebc"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_fhwd8"]
+font_size = 6
+
+[node name="WeaponPickup" type="Area2D"]
+collision_layer = 13
+collision_mask = 13
+script = ExtResource("1_fhwd8")
+weapon_id = "m16"
+glow_color = Color(0.5019608, 1, 0.5019608, 0.5921569)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_shebc")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_ejx18")
+
+[node name="Label" type="Label" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -8.0
+offset_top = -19.0
+offset_right = 8.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Arma"
+label_settings = SubResource("LabelSettings_fhwd8")
+
+[node name="PromptLabel" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
