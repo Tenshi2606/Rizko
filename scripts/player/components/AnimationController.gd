@@ -3,51 +3,23 @@ class_name AnimationController
 extends Node
 
 ## ============================================
-## ANIMATION CONTROLLER
+## ANIMATION CONTROLLER - SIN TRACKS DE HITBOX
 ## ============================================
-## Centraliza todas las animaciones del player
-## Soporte automático para armas
-## Base para sistema de combos
+## Reproduce animaciones y activa/desactiva hitboxes manualmente
 
-# ============================================
-# REFERENCIAS
-# ============================================
+var player: Player
+var animation_player: AnimationPlayer
+var sprite: Sprite2D
+var attack_component: AttackComponent
 
-@onready var player: Player = get_parent()
-@onready var sprite: AnimatedSprite2D
-
-# ============================================
-# CONFIGURACIÓN
-# ============================================
-
-## Tiempo de blend entre animaciones (para transiciones suaves)
-@export var default_blend_time: float = 0.1
-
-## Si las animaciones pueden ser canceladas
-@export var allow_canceling: bool = true
-
-## Frame mínimo para poder cancelar animación
-@export var min_cancel_frame: int = 5
-
-# ============================================
-# VARIABLES INTERNAS
-# ============================================
-
-## Animación actual
 var current_animation: String = ""
-
-## Animación anterior
 var previous_animation: String = ""
-
-## Si la animación actual puede ser cancelada
 var can_cancel: bool = true
 
-## Tiempo desde que empezó la animación actual
-var animation_time: float = 0.0
-
-# ============================================
-# READY
-# ============================================
+# 🆕 CONTROL MANUAL DE HITBOXES
+var hitbox_active: bool = false
+var hitbox_timer: float = 0.0
+var hitbox_duration: float = 0.0
 
 func _ready() -> void:
 	await get_tree().process_frame
@@ -55,210 +27,190 @@ func _ready() -> void:
 	if not player:
 		player = get_parent() as Player
 	
-	sprite = player.get_node_or_null("AnimatedSprite2D") as AnimatedSprite2D
+	# Buscar AnimationPlayer
+	animation_player = player.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	
+	if not animation_player:
+		push_error("AnimationController: No se encontró AnimationPlayer")
+		return
+	
+	# Buscar Sprite2D
+	sprite = player.get_node_or_null("Sprite2D") as Sprite2D
 	
 	if not sprite:
-		push_error("AnimationController: No se encontró AnimatedSprite2D")
+		push_error("AnimationController: No se encontró Sprite2D")
 		return
+	
+	# Buscar AttackComponent
+	attack_component = player.get_node_or_null("AttackComponent") as AttackComponent
+	
+	# 🐛 FIX: NO conectar a animation_finished aquí
+	# ComboSystem ya maneja esto, tener dos callbacks causa conflictos
+	# El callback de AnimationController ya no es necesario
 	
 	print("✅ AnimationController inicializado")
 
 # ============================================
-# PROCESS
+# 🎯 ANIMACIONES DE ATAQUE
 # ============================================
+# AnimationPlayer maneja los hitboxes vía tracks
+# Este script solo reproduce las animaciones
 
-func _process(delta: float) -> void:
-	if sprite and sprite.is_playing():
-		animation_time += delta
-
-# ============================================
-# MÉTODOS PÚBLICOS - REPRODUCIR ANIMACIONES
-# ============================================
-
-## Reproduce una animación con soporte automático para armas
-## @param base_name: Nombre base de la animación (ej: "run", "attack")
-## @param force: Si debe forzar la reproducción aunque ya esté activa
-## @param blend_time: Tiempo de transición (no usado aún, para futuro)
-func play(base_name: String, force: bool = false, _blend_time: float = -1.0) -> void:
-	if not sprite:
+func play(base_name: String, force: bool = false) -> void:
+	if not animation_player:
 		return
 	
-	# Obtener sufijo de arma
-	var weapon_suffix = _get_weapon_suffix()
+	var full_name = _get_animation_name(base_name)
 	
-	# 🔧 PRIORIDAD: Arma primero, luego base
-	# Buscar: attack_scythe_down → attack_down
-	var full_name = base_name + weapon_suffix
+	if current_animation == full_name and not force:
+		return
 	
-	if weapon_suffix != "" and sprite.sprite_frames.has_animation(full_name):
-		# ✅ Tiene animación específica de arma (ej: attack_scythe_down)
-		_play_animation(full_name, force)
-	elif sprite.sprite_frames.has_animation(base_name):
-		# ✅ Usar animación base (ej: attack_down) - fallback
-		_play_animation(base_name, force)
+	if not animation_player.has_animation(full_name):
+		if OS.is_debug_build():
+			print("ℹ️ Animación no encontrada: '", full_name, "' - usando base")
+		if animation_player.has_animation(base_name):
+			full_name = base_name
+		else:
+			return
+	
+	previous_animation = current_animation
+	current_animation = full_name
+	can_cancel = true
+	
+	print("🎬 AnimationController.play():")
+	print("  📝 Base name: ", base_name)
+	print("  🎯 Full name: ", full_name)
+	print("  ✅ AnimationPlayer controlará los hitboxes")
+	
+	# 🆕 Limpiar lista de enemigos golpeados al empezar un ataque
+	if _is_attack_animation(full_name) and attack_component:
+		attack_component.enemies_hit_this_attack.clear()
+		print("  🔄 Lista de golpes limpiada")
+	
+	animation_player.play(full_name)
+
+# ============================================
+# 🔧 PROCESO CONTINUO (YA NO GESTIONA HITBOX)
+# ============================================
+
+func _process(_delta: float) -> void:
+	# Ya no hay gestión manual de hitboxes
+	# AnimationPlayer lo hace todo vía tracks
+	pass
+
+# ============================================
+# 📊 HELPERS
+# ============================================
+
+func _is_attack_animation(anim_name: String) -> bool:
+	return anim_name.contains("attack") or anim_name.contains("scythe")
+
+func _get_attack_type_from_animation(anim_name: String) -> String:
+	if anim_name.contains("launcher"):
+		return "launcher"
+	elif anim_name.contains("pogo"):
+		return "pogo"
+	elif anim_name.contains("air"):
+		return "air"
 	else:
-		# ❌ No existe ninguna
-		push_warning("⚠️ Animación no encontrada: '" + base_name + "' ni '" + full_name + "'")
+		return "ground"
 
-## Reproduce una animación de combo específica
-## @param combo_index: Índice del combo (1, 2, 3, etc.)
-func play_combo(combo_index: int) -> void:
-	var anim_name = "attack_" + str(combo_index)
-	play(anim_name, true)
-
-## Reproduce animación de launcher (para combos aéreos)
-func play_launcher() -> void:
-	play("attack_launcher", true)
-
-## Reproduce animación de ataque aéreo
-## @param air_index: Índice del ataque aéreo (1, 2, etc.)
-func play_air_attack(air_index: int = 1) -> void:
-	var anim_name = "air_attack_" + str(air_index)
-	play(anim_name, true)
+func _get_hitbox_duration(attack_type: String) -> float:
+	match attack_type:
+		"ground":
+			return 0.25
+		"air":
+			return 0.3
+		"pogo":
+			return 0.3
+		"launcher":
+			return 0.35
+		_:
+			return 0.3
 
 # ============================================
-# MÉTODOS PÚBLICOS - CONTROL DE ANIMACIÓN
+# 🗺️ MAPEO DE NOMBRES SIMPLIFICADO
 # ============================================
 
-## Detiene la animación actual
+func _get_animation_name(base_name: String) -> String:
+	if not animation_player:
+		return base_name
+	
+	# Si ya tiene prefijo de arma, devolver tal cual
+	if base_name.begins_with("scythe_") or base_name.begins_with("spectral_"):
+		return base_name
+	
+	# Intentar con prefijo de arma PRIMERO
+	var weapon = player.get_current_weapon() if player else null
+	if weapon and weapon.weapon_id:
+		var prefix = weapon.weapon_id + "_"
+		
+		# Solo añadir prefijo a animaciones básicas (idle, run, jump, fall)
+		if base_name in ["idle", "run", "jump", "fall", "land"]:
+			var prefixed_name = prefix + base_name
+			# Verificar si existe la animación con prefijo
+			if animation_player.has_animation(prefixed_name):
+				return prefixed_name
+	
+	# Si la animación base existe, usarla como fallback
+	if animation_player.has_animation(base_name):
+		return base_name
+	
+	# Último fallback
+	return base_name
+
+# ============================================
+# 🎮 API PÚBLICA
+# ============================================
+
 func stop() -> void:
-	if sprite:
-		sprite.stop()
-		animation_time = 0.0
+	if animation_player:
+		animation_player.stop()
+	# AnimationPlayer maneja los hitboxes, no necesitamos desactivarlos manualmente
 
-## Pausa la animación actual
 func pause() -> void:
-	if sprite:
-		sprite.pause()
+	if animation_player:
+		animation_player.pause()
 
-## Reanuda la animación pausada
 func resume() -> void:
-	if sprite:
-		sprite.play()
+	if animation_player:
+		animation_player.play()
 
-## Verifica si se puede cancelar la animación actual
 func can_cancel_animation() -> bool:
-	if not allow_canceling:
-		return false
-	
-	if not can_cancel:
-		return false
-	
-	# Verificar frame mínimo
-	if sprite and sprite.is_playing():
-		var current_frame = sprite.frame
-		return current_frame >= min_cancel_frame
-	
-	return true
+	return can_cancel
 
-## Fuerza que la animación actual sea cancelable
 func set_cancelable(cancelable: bool) -> void:
 	can_cancel = cancelable
 
-# ============================================
-# MÉTODOS PÚBLICOS - INFORMACIÓN
-# ============================================
-
-## Obtiene el nombre de la animación actual
 func get_current_animation() -> String:
 	return current_animation
 
-## Obtiene el nombre de la animación anterior
 func get_previous_animation() -> String:
 	return previous_animation
 
-## Verifica si una animación existe
 func has_animation(anim_name: String) -> bool:
-	if not sprite:
+	if not animation_player:
 		return false
 	
-	var weapon_suffix = _get_weapon_suffix()
-	var full_name = anim_name + weapon_suffix
-	
-	return sprite.sprite_frames.has_animation(full_name) or sprite.sprite_frames.has_animation(anim_name)
+	var full_name = _get_animation_name(anim_name)
+	return animation_player.has_animation(full_name)
 
-## Obtiene la duración de una animación en segundos
 func get_animation_length(anim_name: String) -> float:
-	if not sprite or not sprite.sprite_frames:
+	if not animation_player:
 		return 0.0
 	
-	var weapon_suffix = _get_weapon_suffix()
-	var full_name = anim_name + weapon_suffix
+	var full_name = _get_animation_name(anim_name)
 	
-	# Intentar con arma primero
-	if sprite.sprite_frames.has_animation(full_name):
-		var frame_count = sprite.sprite_frames.get_frame_count(full_name)
-		var fps = sprite.sprite_frames.get_animation_speed(full_name)
-		return frame_count / fps if fps > 0 else 0.0
-	elif sprite.sprite_frames.has_animation(anim_name):
-		var frame_count = sprite.sprite_frames.get_frame_count(anim_name)
-		var fps = sprite.sprite_frames.get_animation_speed(anim_name)
-		return frame_count / fps if fps > 0 else 0.0
+	if animation_player.has_animation(full_name):
+		return animation_player.get_animation(full_name).length
 	
 	return 0.0
 
-## Obtiene el tiempo transcurrido de la animación actual
-func get_animation_time() -> float:
-	return animation_time
-
-## Verifica si la animación actual ha terminado
 func is_animation_finished() -> bool:
-	if not sprite:
+	if not animation_player:
 		return true
-	return not sprite.is_playing()
+	return not animation_player.is_playing()
 
-## Obtiene el frame actual de la animación
-func get_current_frame() -> int:
-	if not sprite:
-		return 0
-	return sprite.frame
-
-## Obtiene el total de frames de la animación actual
-func get_frame_count() -> int:
-	if not sprite or current_animation == "":
-		return 0
-	return sprite.sprite_frames.get_frame_count(current_animation)
-
-# ============================================
-# MÉTODOS INTERNOS
-# ============================================
-
-func _play_animation(anim_name: String, force: bool) -> void:
-	if not sprite:
-		return
-	
-	# Si es la misma animación y no se fuerza, no hacer nada
-	if current_animation == anim_name and not force:
-		return
-	
-	# Guardar animación anterior
-	previous_animation = current_animation
-	current_animation = anim_name
-	animation_time = 0.0
-	can_cancel = true
-	
-	# Reproducir
-	sprite.play(anim_name)
-
-func _get_weapon_suffix() -> String:
-	if not player:
-		return ""
-	
-	var weapon_system = player.get_node_or_null("WeaponSystem") as WeaponSystem
-	if not weapon_system:
-		return ""
-	
-	var weapon = weapon_system.get_current_weapon()
-	if not weapon:
-		return ""
-	
-	# Mapeo de IDs de arma a sufijos
-	match weapon.weapon_id:
-		"scythe":
-			return "_scythe"
-		"sword":
-			return "_sword"
-		"axe":
-			return "_axe"
-		_:
-			return ""
+func set_flip_h(flip: bool) -> void:
+	if sprite:
+		sprite.flip_h = flip

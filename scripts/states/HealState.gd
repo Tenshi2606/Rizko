@@ -75,13 +75,15 @@ func _ensure_melee_weapon() -> void:
 	
 	var current_weapon = weapon_system.get_current_weapon()
 	if not current_weapon:
+		print("  ⚠️ No hay arma equipada - curación cancelada")
+		state_machine.change_to("idle")
 		return
 	
 	# Si tiene arma de rango, cambiar a melee
 	if current_weapon.has_projectile:
 		print("🔄 Arma de rango detectada, cambiando a melee...")
 		
-		# Prioridad: Guadaña > Manos
+		# Prioridad: Guadaña
 		if weapon_system.has_weapon("scythe"):
 			var scythe = WeaponDB.get_weapon("scythe")
 			if scythe:
@@ -89,12 +91,9 @@ func _ensure_melee_weapon() -> void:
 				print("  ✅ Cambiado a: Guadaña Espectral")
 				return
 		
-		# Si no tiene guadaña, usar manos
-		var hands = WeaponDB.get_weapon("spectral_hands")
-		if hands:
-			weapon_system.equip_weapon(hands)
-			print("  ✅ Cambiado a: Manos Espectrales")
-
+		# Si no tiene guadaña, cancelar curación
+		print("  ⚠️ No hay arma melee disponible - curación cancelada")
+		state_machine.change_to("idle")
 
 func on_input(event: InputEvent) -> void:
 	if event.is_action_pressed("attack") and not is_attacking and attack_cooldown_timer <= 0:
@@ -204,11 +203,10 @@ func on_physics_process(delta: float) -> void:
 
 # 🆕 ANIMACIÓN DE MOVIMIENTO CON ARMAS
 func _update_movement_animation() -> void:
-	if not player.sprite:
+	# Usar AnimationController en lugar de acceder directamente al sprite
+	# Use inherited anim_controller from PlayerStateBase
+	if not anim_controller:
 		return
-	
-	# Obtener arma actual para determinar sufijo de animación
-	var anim_suffix = _get_animation_suffix()
 	
 	# Determinar animación base según estado
 	var base_anim = ""
@@ -224,36 +222,8 @@ func _update_movement_animation() -> void:
 		else:
 			base_anim = "idle"
 	
-	# Construir nombre de animación con sufijo
-	var anim_name = base_anim + anim_suffix
-	
-	# Intentar usar animación con arma, si no existe usar la base
-	if player.sprite.sprite_frames.has_animation(anim_name):
-		if player.sprite.animation != anim_name:
-			player.sprite.play(anim_name)
-	elif player.sprite.sprite_frames.has_animation(base_anim):
-		if player.sprite.animation != base_anim:
-			player.sprite.play(base_anim)
-
-# 🆕 OBTENER SUFIJO DE ANIMACIÓN SEGÚN ARMA
-func _get_animation_suffix() -> String:
-	var weapon_system = player.get_node_or_null("WeaponSystem") as WeaponSystem
-	if not weapon_system:
-		return ""
-	
-	var weapon = weapon_system.get_current_weapon()
-	if not weapon:
-		return ""
-	
-	# Sufijos según arma
-	match weapon.weapon_id:
-		"scythe":
-			return "_scythe"
-		"spectral_hands":
-			return ""  # Animaciones base
-		_:
-			return ""
-
+	# Reproducir animación usando AnimationController
+	anim_controller.play(base_anim)
 
 func _restore_movement_animation() -> void:
 	_update_movement_animation()
@@ -317,34 +287,26 @@ func _start_attack() -> void:
 	attack_hitbox_timer = attack_duration
 	attack_cooldown_timer = attack_cooldown
 	
-	var attack_component = player.get_node_or_null("AttackComponent")
-	if attack_component:
-		player.current_attack_direction = attack_component.get_attack_direction()
-	
-	_activate_hitbox()
-	
-	# 🆕 REPRODUCIR ANIMACIÓN DE ATAQUE CON ARMA
-	if player.sprite:
-		var anim_suffix = _get_animation_suffix()
-		var attack_anim = "attack" + anim_suffix
-		
-		# Intentar animación con arma, si no existe usar la base
-		if player.sprite.sprite_frames.has_animation(attack_anim):
-			player.sprite.play(attack_anim)
-		elif player.sprite.sprite_frames.has_animation("attack"):
-			player.sprite.play("attack")
+	# Usar ComboSystem para manejar el ataque correctamente
+	var combo_system = player.get_node_or_null("ComboSystem") as ComboSystem
+	if combo_system:
+		# Intentar ejecutar ataque a través del ComboSystem
+		combo_system.try_attack()
+	else:
+		# Fallback: usar AnimationController directamente
+		# Use inherited anim_controller from PlayerStateBase
+		if anim_controller:
+			anim_controller.play("attack_ground_1")
 
 func _activate_hitbox() -> void:
-	if player.attack_hitbox and not hitbox_active:
-		# ✅ USAR set_deferred PARA EVITAR BLOQUEO
-		player.attack_hitbox.set_deferred("monitoring", true)
-		hitbox_active = true
+	# Los hitboxes ahora son manejados automáticamente por AnimationPlayer
+	# No necesitamos hacer nada aquí
+	pass
 
 func _deactivate_hitbox() -> void:
-	if player.attack_hitbox and hitbox_active:
-		# ✅ USAR set_deferred PARA EVITAR BLOQUEO
-		player.attack_hitbox.set_deferred("monitoring", false)
-		hitbox_active = false
+	# Los hitboxes ahora son manejados automáticamente por AnimationPlayer
+	# No necesitamos hacer nada aquí
+	pass
 
 func register_hit() -> void:
 	
@@ -388,10 +350,8 @@ func _end_healing(reason: String) -> void:
 	dash_timer = 0.0
 	dash_cooldown_timer = 0.0
 	
-	# ✅ DESACTIVAR HITBOX CON set_deferred
-	if player.attack_hitbox:
-		player.attack_hitbox.set_deferred("monitoring", false)
-		hitbox_active = false
+	# Hitboxes manejados por AnimationPlayer
+	hitbox_active = false
 	
 	# 🆕 DESACTIVAR AURA VÍA VFXManager
 	var vfx_manager = player.get_node_or_null("VFXManager") as VFXManager
@@ -414,9 +374,7 @@ func end():
 	
 	player.is_in_healing_mode = false
 	
-	# ✅ DESACTIVAR HITBOX CON set_deferred
-	if player.attack_hitbox:
-		player.attack_hitbox.set_deferred("monitoring", false)
+	# Hitboxes manejados por AnimationPlayer
 	
 	player.is_jumping = false
 	player.active_healing_fragment = null

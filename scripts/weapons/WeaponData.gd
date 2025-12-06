@@ -43,6 +43,19 @@ enum BreakableType { NONE, WOOD, STONE, METAL_LIGHT, METAL_HEAVY, ICE, CRYSTAL }
 @export var crit_multiplier_bonus: float = 0.0
 @export var lifesteal_bonus: int = 0
 
+@export_group("Upgrade System")
+## Nivel de upgrade actual del arma (0 = base, 1+ = mejorado)
+@export var upgrade_level: int = 0
+
+## Nivel máximo de upgrade posible
+@export var max_upgrade_level: int = 3
+
+## Bonificación de daño por nivel de upgrade (%)
+@export var damage_per_upgrade: float = 10.0
+
+## ¿Esta arma puede ser mejorada?
+@export var can_be_upgraded: bool = true
+
 @export_group("Obstáculos")
 @export var can_break: BreakableType = BreakableType.NONE
 

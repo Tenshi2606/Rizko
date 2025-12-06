@@ -5,22 +5,16 @@ func start():
 	player.jump_time = 0.0
 	player.velocity.y = -player.jump_initial_speed
 	
-	# 🆕 Cambiar animación según arma equipada
-	var weapon = player.get_current_weapon()
-	
-	if weapon and weapon.weapon_id == "scythe":
-		if player.sprite.sprite_frames.has_animation("jump_scythe"):
-			player.sprite.play("jump_scythe")
-			print("🦘 Animación 'jump_scythe' activada")
-		else:
-			player.sprite.play("jump")  # Fallback
-	else:
-		player.sprite.play("jump")
-		print("🦘 Animación 'jump' activada")
+	# AnimationController maneja automáticamente las animaciones con arma
+	if anim_controller:
+		anim_controller.play("jump")
 
 func on_physics_process(delta: float) -> void:
-	
+	# Si presiona ataque, verificar si ya está atacando
 	if not player.is_in_healing_mode and Input.is_action_just_pressed("attack"):
+		# Si ya está en estado de ataque, NO cambiar de estado
+		if state_machine.current_state.name == "Attack":
+			return
 		state_machine.change_to("Attack")
 		return
 	

@@ -52,18 +52,19 @@ func start():
 	if vfx_manager:
 		vfx_manager.activate_dash_trail()
 	
-	# 🆕 ANIMACIÓN DE DASH (si existe)
-	if player.sprite:
-		if player.sprite.sprite_frames.has_animation("dash"):
-			player.sprite.play("dash")
-			print("💨 Animación 'dash' activada")
-		else:
-			# Fallback: usar run o jump según contexto
-			if player.is_on_floor():
-				player.sprite.play("run")
-			else:
-				player.sprite.play("jump")
-		
+	# Animación de dash
+	if anim_controller:
+		anim_controller.play("dash")
+		# Fallback: usar run o jump según contexto si "dash" no existe o si se quiere un comportamiento específico
+		# La lógica de fallback debería estar dentro del AnimationController o manejarse aquí si es necesario.
+		# Por ahora, asumo que "dash" siempre existe o que el AnimationController maneja el fallback.
+		# Si se necesita un fallback explícito aquí, sería algo como:
+		# if not anim_controller.has_animation("dash"):
+		# 	if player.is_on_floor():
+		# 		anim_controller.play("run")
+		# 	else:
+		# 		anim_controller.play("jump")
+	
 		# Efecto visual: brillo azul durante dash (si NO está curándose)
 		if not was_healing:
 			player.sprite.modulate = Color(0.7, 0.7, 1.0)

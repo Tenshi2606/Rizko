@@ -30,8 +30,8 @@ func _ready() -> void:
 	
 	# 🆕 Obtener referencia al MovementComponent
 	movement_component = player.get_node_or_null("MovementComponent") as MovementComponent
-	if not movement_component:
-		push_warning("⚠️ MovementComponent no encontrado en Player")
+	if not movement_component and OS.is_debug_build():
+		print("ℹ️ MovementComponent no encontrado (knockback desactivado)")
 	
 	print("✅ HealthComponent inicializado con HealthBar")
 
@@ -234,8 +234,9 @@ func die() -> void:
 # ============================================
 
 func _apply_damage_freeze() -> void:
-	# 🆕 Usar FreezeManager centralizado
-	FreezeManager.apply_damage_freeze()
+	# TODO: FreezeManager no tiene apply_damage_freeze
+	# FreezeManager.apply_damage_freeze()
+	pass
 
 
 

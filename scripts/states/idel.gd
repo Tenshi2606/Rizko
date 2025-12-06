@@ -1,19 +1,16 @@
 extends PlayerStateBase
 
 func start():
-	# 🆕 Cambiar animación según arma equipada
-	var weapon = player.get_current_weapon()
-	
-	if weapon and weapon.weapon_id == "scythe":
-		if player.sprite.sprite_frames.has_animation("idle_scythe"):
-			player.sprite.play("idle_scythe")
-		else:
-			player.sprite.play("idle")  # Fallback
-	else:
-		player.sprite.play("idle")
+	# AnimationController maneja automáticamente las animaciones con arma
+	if anim_controller:
+		anim_controller.play("idle")
 
 func on_physics_process(delta: float) -> void:
+	# Si presiona ataque, verificar si ya está atacando
 	if not player.is_in_healing_mode and Input.is_action_just_pressed("attack"):
+		# Si ya está en estado de ataque, NO cambiar de estado
+		if state_machine.current_state.name == "Attack":
+			return
 		state_machine.change_to("Attack")
 		return
 	

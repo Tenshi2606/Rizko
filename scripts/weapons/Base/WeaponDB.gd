@@ -10,44 +10,10 @@ func _ready() -> void:
 	print("🗡️ WeaponDatabase inicializado - ", weapons.size(), " armas")
 
 func _initialize_weapons() -> void:
-	# Arma por defecto (manos espectrales - sin modificar)
-	weapons["spectral_hands"] = _create_spectral_hands()
-	
 	# === 3 ARMAS PRINCIPALES ===
 	weapons["scythe"] = _create_scythe()           # 1️⃣ Guaraña (melee pesada)
 	weapons["m16"] = _create_m16()                 # 2️⃣ M16 (ráfagas)
 	weapons["flamethrower"] = _create_flamethrower()  # 3️⃣ Lanzallamas (DOT)
-
-# ============================================
-# ARMA POR DEFECTO - MANOS ESPECTRALES
-# ============================================
-
-func _create_spectral_hands() -> WeaponData:
-	var weapon = WeaponData.new()
-	weapon.weapon_id = "spectral_hands"
-	weapon.weapon_name = "Manos Espectrales"
-	weapon.description = "Tus manos fantasmales básicas. Rápidas pero débiles."
-	
-	weapon.weapon_type = WeaponData.WeaponType.MELEE
-	weapon.base_damage = 5.0
-	weapon.attack_speed_multiplier = 0.7
-	weapon.attack_range = 20.0
-	weapon.knockback_force = Vector2(20, 20)
-	
-	weapon.crit_chance_bonus = 0.0
-	weapon.crit_multiplier_bonus = 0.0
-	weapon.lifesteal_bonus = 0
-	
-	weapon.attack_animation = "attack"
-	weapon.attack_up_animation = "attack_up"
-	weapon.attack_down_animation = "attack_down"
-	
-	# Sin sprite personalizado (usa animaciones del player)
-	weapon.hand_sprite = ""
-	
-	weapon.can_break = WeaponData.BreakableType.NONE
-	
-	return weapon
 
 # ============================================
 # 1️⃣ GUARAÑA ESPECTRAL - MELEE PESADA

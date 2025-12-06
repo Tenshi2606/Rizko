@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=4 uid="uid://0wkw4bxq6br8"]
+[gd_scene load_steps=17 format=4 uid="uid://bd7gjx0xbvtev"]
 
 [ext_resource type="Texture2D" uid="uid://c0jr5nvxji1s5" path="res://textures/Temp/Tileset/DeepCaveTile.png" id="1_wjtdv"]
 [ext_resource type="TileSet" uid="uid://d2oy5re682is" path="res://textures/Temp/Tileset/Catatumba01.tres" id="2_0daro"]
@@ -110,10 +110,10 @@ position = Vector2(-216, -208)
 position = Vector2(-971, -210)
 
 [node name="FlyingEnemy2" parent="." instance=ExtResource("9_jqscc")]
-position = Vector2(-879, -242)
+position = Vector2(-274, -245)
 
 [node name="FlyingEnemy" parent="." instance=ExtResource("9_jqscc")]
-position = Vector2(-772, -248)
+position = Vector2(-645, -243)
 
 [node name="SceneDoor" parent="." instance=ExtResource("4_fmg8j")]
 position = Vector2(747, -689)

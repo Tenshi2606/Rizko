@@ -46,16 +46,17 @@ func _ready() -> void:
 	projectile_spawn = player.get_node_or_null("ProjectileSpawn") as Marker2D
 	
 	if not projectile_spawn:
-		push_warning("⚠️ No se encontró ProjectileSpawn. Añádelo como hijo del Player en la escena.")
-		push_warning("   Position recomendada: (0, -10) para centro del sprite")
+		# Solo mostrar en debug builds (normal para armas melee)
+		if OS.is_debug_build():
+			print("ℹ️ ProjectileSpawn no encontrado (normal para armas melee)")
 	else:
 		print("  ✅ ProjectileSpawn encontrado en posición: ", projectile_spawn.position)
 	
-	# Desbloquear arma por defecto
-	var default_weapon = WeaponDB.get_weapon("spectral_hands")
-	if default_weapon:
-		unlock_weapon(default_weapon, false)
-		equip_weapon(default_weapon)
+	# Jugador empieza sin arma - debe recoger una
+	# var default_weapon = null
+	# if default_weapon:
+	# 	unlock_weapon(default_weapon, false)
+	# 	equip_weapon(default_weapon)
 	
 	print("🗡️ WeaponSystem inicializado")
 
@@ -81,7 +82,7 @@ func _process(delta: float) -> void:
 			_finish_reload()
 	
 	# 🆕 FLIP HORIZONTAL DEL SPAWN SEGÚN DIRECCIÓN
-	if projectile_spawn and player:
+	if projectile_spawn and player and player.sprite:
 		# Solo invertir X, mantener Y fijo
 		var base_x = abs(projectile_spawn.position.x)
 		projectile_spawn.position.x = -base_x if player.sprite.flip_h else base_x
@@ -103,6 +104,9 @@ func unlock_weapon(weapon: WeaponData, notify: bool = true) -> bool:
 	if notify:
 		weapon_unlocked.emit(weapon)
 		_show_weapon_unlock_notification(weapon)
+		
+		# 🎯 EMITIR EVENTO A EVENTBUS
+		EventBus.weapon_changed.emit(null, weapon)
 	
 	return true
 
@@ -118,11 +122,14 @@ func equip_weapon(weapon: WeaponData) -> void:
 	_apply_weapon_stats()
 	
 	# 🆕 ACTUALIZAR HITBOX SOLO AL CAMBIAR ARMA
-	_update_attack_hitbox()
+	# _update_attack_hitbox()  # TODO: Migrar a AnimationPlayer
 	
 	weapon_equipped.emit(weapon)
 	if old_weapon:
 		weapon_changed.emit(old_weapon, weapon)
+		
+	# 🎯 EMITIR EVENTO A EVENTBUS
+	EventBus.weapon_changed.emit(old_weapon, weapon)
 
 func cycle_weapon(direction: int = 1) -> void:
 	if available_weapons.size() <= 1:
@@ -138,27 +145,29 @@ func cycle_weapon(direction: int = 1) -> void:
 # 🆕 ACTUALIZAR HITBOX (SOLO AL CAMBIAR ARMA)
 # ============================================
 
-func _update_attack_hitbox() -> void:
-	if not player or not player.attack_hitbox:
-		return
-	
-	var collision_shape = player.attack_hitbox.get_node_or_null("CollisionShape2D")
-	if not collision_shape or not current_weapon:
-		return
-	
-	var shape = collision_shape.shape
-	if not shape:
-		return
-	
-	# Ajustar tamaño según rango del arma
-	if shape is RectangleShape2D:
-		var rect_shape = shape as RectangleShape2D
-		var size_multiplier = current_weapon.attack_range / 25.0
-		rect_shape.size = Vector2(30 * size_multiplier, 30 * size_multiplier)
-	elif shape is CircleShape2D:
-		var circle_shape = shape as CircleShape2D
-		var radius_multiplier = current_weapon.attack_range / 25.0
-		circle_shape.radius = 15 * radius_multiplier
+# TODO: Esta función usa el viejo sistema de attack_hitbox
+# Ahora los hitboxes se manejan via AnimationPlayer
+# func _update_attack_hitbox() -> void:
+# 	if not player or not player.attack_hitbox:
+# 		return
+# 	
+# 	var collision_shape = player.attack_hitbox.get_node_or_null("CollisionShape2D")
+# 	if not collision_shape or not current_weapon:
+# 		return
+# 	
+# 	var shape = collision_shape.shape
+# 	if not shape:
+# 		return
+# 	
+# 	# Ajustar tamaño según rango del arma
+# 	if shape is RectangleShape2D:
+# 		var rect_shape = shape as RectangleShape2D
+# 		var size_multiplier = current_weapon.attack_range / 25.0
+# 		rect_shape.size = Vector2(30 * size_multiplier, 30 * size_multiplier)
+# 	elif shape is CircleShape2D:
+# 		var circle_shape = shape as CircleShape2D
+# 		var radius_multiplier = current_weapon.attack_range / 25.0
+# 		circle_shape.radius = 15 * radius_multiplier
 
 func _change_hand_sprite() -> void:
 	if not hand_sprite or not current_weapon:
@@ -221,7 +230,9 @@ func _fire_burst_shot() -> void:
 	if burst_shots_remaining <= 0:
 		return
 	
-	var direction = Vector2.RIGHT if not player.sprite.flip_h else Vector2.LEFT
+	var direction = Vector2.RIGHT
+	if player.sprite:
+		direction = Vector2.RIGHT if not player.sprite.flip_h else Vector2.LEFT
 	_spawn_projectile(direction)
 	
 	burst_shots_remaining -= 1

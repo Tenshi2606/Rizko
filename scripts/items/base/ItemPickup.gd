@@ -238,7 +238,6 @@ func setup_as_soul() -> void:
 	var soul_color: Color
 	var glow_color: Color
 	var glow_energy: float
-	var rarity_name: String
 	
 	# Determinar color según rareza del alma
 	match item.rarity:
@@ -246,17 +245,14 @@ func setup_as_soul() -> void:
 			soul_color = Color(1.0, 0.9, 0.3)  # Dorado brillante
 			glow_color = Color(1.0, 0.85, 0.4)  # Amarillo dorado
 			glow_energy = 1.2  # Muy brillante
-			rarity_name = "DORADA"
 		Item.ItemRarity.UNCOMMON:  # Alma MORADA (intermedia)
 			soul_color = Color(0.4, 0.2, 0.5)  # Morado oscuro
 			glow_color = Color(0.6, 0.3, 0.8)  # Púrpura brillante intenso
 			glow_energy = 1.0  # Brillante
-			rarity_name = "MORADA"
 		_:  # Alma BLANCA (básica - COMMON)
 			soul_color = Color(1.0, 1.0, 1.0)  # Blanco puro
 			glow_color = Color(0.7, 0.85, 1.0)  # Azul claro
 			glow_energy = 0.8  # Moderado
-			rarity_name = "BLANCA"
 	
 	# Reproducir animación del alma
 	if sprite and sprite.sprite_frames and sprite.sprite_frames.has_animation("soul"):

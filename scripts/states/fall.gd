@@ -1,27 +1,16 @@
 extends PlayerStateBase
 
 func start():
-	
-	# 🆕 Cambiar animación según arma equipada
-	var weapon = player.get_current_weapon()
-	
-	if weapon and weapon.weapon_id == "scythe":
-		if player.sprite.sprite_frames.has_animation("fall_scythe"):
-			player.sprite.play("fall_scythe")
-			print("🍂 Animación 'fall_scythe' activada")
-		else:
-			player.sprite.play("fall")  # Fallback
-	else:
-		if player.sprite.sprite_frames.has_animation("fall"):
-			player.sprite.play("fall")
-			print("🍂 Animación 'fall' activada")
-		else:
-			player.sprite.play("jump")  # Fallback
-			print("⚠️ Animación 'fall' no existe, usando 'jump'")
+	# AnimationController maneja automáticamente las animaciones con arma
+	if anim_controller:
+		anim_controller.play("fall")
 
 func on_physics_process(delta: float) -> void:
-	
+	# Si presiona ataque, verificar si ya está atacando
 	if not player.is_in_healing_mode and Input.is_action_just_pressed("attack"):
+		# Si ya está en estado de ataque, NO cambiar de estado
+		if state_machine.current_state.name == "Attack":
+			return
 		state_machine.change_to("Attack")
 		return
 	
@@ -37,17 +26,8 @@ func on_physics_process(delta: float) -> void:
 	elif target_speed < player.velocity.x:
 		player.velocity.x = max(player.velocity.x - player.acceleration * delta, target_speed)
 	
-	# 🔥 ASEGURAR QUE LA ANIMACIÓN SE MANTIENE
-	var weapon = player.get_current_weapon()
-	if player.sprite:
-		if weapon and weapon.weapon_id == "scythe":
-			if player.sprite.animation != "fall_scythe":
-				if player.sprite.sprite_frames.has_animation("fall_scythe"):
-					player.sprite.play("fall_scythe")
-		else:
-			if player.sprite.animation != "fall":
-				if player.sprite.sprite_frames.has_animation("fall"):
-					player.sprite.play("fall")
+	# AnimationController ya maneja las animaciones automáticamente
+	# No necesitamos verificar manualmente
 	
 	if player.is_on_floor():
 		if abs(player.velocity.x) > 10:

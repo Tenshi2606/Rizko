@@ -1,23 +1,16 @@
 extends PlayerStateBase
 
 func start():
-	# 🆕 Usar AnimationController si está disponible
+	# AnimationController maneja automáticamente las animaciones con arma
 	if anim_controller:
 		anim_controller.play("run")
-	else:
-		# Fallback al método antiguo
-		var weapon_system = player.get_node_or_null("WeaponSystem") as WeaponSystem
-		if weapon_system and weapon_system.get_current_weapon() and weapon_system.get_current_weapon().weapon_id == "scythe":
-			if player.sprite.sprite_frames.has_animation("run_scythe"):
-				player.sprite.play("run_scythe")
-			else:
-				player.sprite.play("run")  # Fallback
-		else:
-			player.sprite.play("run")
 
 func on_physics_process(delta: float) -> void:
-	
+	# Si presiona ataque, verificar si ya está atacando
 	if not player.is_in_healing_mode and Input.is_action_just_pressed("attack"):
+		# Si ya está en estado de ataque, NO cambiar de estado
+		if state_machine.current_state.name == "Attack":
+			return
 		state_machine.change_to("Attack")
 		return
 	

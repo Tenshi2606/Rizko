@@ -249,6 +249,7 @@ func _on_inventory_changed() -> void:
 	_refresh_items()
 
 # 🎯 LISTENER DE EVENTBUS
+@warning_ignore("unused_parameter")
 func _on_item_collected_event(item: Item, collector: Node) -> void:
 	# Solo procesar si el collector es el player actual
 	if collector != current_player:

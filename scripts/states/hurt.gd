@@ -7,10 +7,9 @@ var hurt_timer: float = 0.0
 func start():
 	hurt_timer = hurt_duration
 	
-	# Animación de daño si existe
-	if player.sprite:
-		if player.sprite.sprite_frames.has_animation("hurt"):
-			player.sprite.play("hurt")
+	# Animación de daño
+	if anim_controller:
+		anim_controller.play("hurt")
 	
 	print("💥 Hurt state iniciado - Duración: ", hurt_duration)
 

@@ -10,29 +10,67 @@ extends Node
 ##
 ## ⚠️ NOTA: Las advertencias "UNUSED_SIGNAL" son NORMALES
 ## Las señales se usan en OTROS scripts, no en EventBus.gd
-## Godot solo verifica uso dentro del mismo archivo.
 
-# Suprimir advertencias de señales no usadas (son usadas en otros scripts)
+# ============================================
+# COMBAT
+# ============================================
+
+# Suprimir advertencias - las señales se usan en otros scripts
 @warning_ignore("unused_signal")
 
-# ============================================
-# COMBATE
-# ============================================
-
-## Emitido cuando el player ataca
-signal player_attacked(damage: int, target: Node)
-
-## Emitido cuando un enemigo es atacado
-signal enemy_attacked(damage: int, enemy: EnemyBase, attacker: Node)
-
-## Emitido cuando un enemigo muere
 signal enemy_killed(enemy: EnemyBase, killer: Node)
+
+## Emitido cuando se lanza un enemigo al aire (launcher/uppercut)
+signal enemy_launched(enemy: EnemyBase)
+
+## Emitido cuando se hace pogo bounce sobre un enemigo
+signal pogo_bounce(enemy: EnemyBase)
+
+## Emitido cuando se ejecuta un ataque de combo
+signal combo_attack_executed(attack_name: String, combo_index: int)
 
 ## Emitido cuando se aplica daño (genérico)
 signal damage_dealt(amount: int, target: Node, source: Node)
 
 ## Emitido cuando se aplica knockback
 signal knockback_applied(target: Node, force: Vector2)
+
+## Emitido cuando el player ataca a un enemigo (para combo tracking)
+signal enemy_attacked(enemy: Node, damage: int, attacker: Node)
+
+## Emitido cuando un enemigo recibe daño
+signal enemy_damaged(enemy: Node, damage: int, attacker: Node)
+
+# ============================================
+# PLAYER EVENTS
+# ============================================
+
+## Emitido cuando el player salta
+signal player_jumped
+
+## Emitido cuando el player aterriza
+signal player_landed
+
+## Emitido cuando el player hace dash
+signal player_dashed
+
+## Emitido cuando el player entra en curación
+signal healing_started
+
+## Emitido cuando el player termina curación
+signal healing_ended
+
+## Emitido cuando el player recibe daño
+signal player_damaged(damage: int, source: Node)
+
+## Emitido cuando el player se cura
+signal player_healed(amount: int)
+
+## Emitido cuando la vida del player cambia
+signal player_health_changed(current_health: int, max_health: int)
+
+## Emitido cuando el player muere (con posición para death screen)
+signal player_death(position: Vector2)
 
 # ============================================
 # ITEMS
@@ -88,24 +126,11 @@ signal game_paused
 ## Emitido cuando se reanuda el juego
 signal game_resumed
 
-## Emitido cuando el player muere
+## Emitido cuando el player muere (versión simple)
 signal player_died
 
 ## Emitido cuando se activa un checkpoint
 signal checkpoint_activated(checkpoint: Node)
-
-# ============================================
-# PLAYER STATE
-# ============================================
-
-## Emitido cuando cambia la vida del player
-signal player_health_changed(current: int, max_health: int)
-
-## Emitido cuando el player se cura
-signal player_healed(amount: int)
-
-## Emitido cuando el player recibe daño
-signal player_damaged(amount: int)
 
 ## Emitido cuando cambia el arma equipada
 signal weapon_changed(old_weapon: WeaponData, new_weapon: WeaponData)

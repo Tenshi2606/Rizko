@@ -1,11 +1,3 @@
-# res://scripts/player/Player.gd
-## Clase principal del jugador
-##
-## Maneja todos los stats, componentes y comportamientos del jugador.
-## Usa un sistema de State Machine para gestionar estados (idle, run, jump, attack, etc.)
-## y componentes modulares para funcionalidades específicas.
-##
-## @tutorial: https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html
 extends CharacterBody2D
 class_name Player
 
@@ -119,14 +111,12 @@ var stored_velocity: Vector2 = Vector2.ZERO
 # Todos los componentes son modulares y se comunican vía EventBus
 # cuando es posible para mantener bajo acoplamiento.
 
-## Sprite principal del jugador (AnimatedSprite2D)
-## Maneja todas las animaciones visuales
-@onready var sprite: AnimatedSprite2D = $AnimatedSprite2D
+## Sprite principal del jugador (Sprite2D)
+## Maneja todas las animaciones visuales via AnimationPlayer
+@onready var sprite: Sprite2D = $Sprite2D
 
-## Hitbox de ataque (Area2D)
-## Detecta colisiones con enemigos durante ataques
-## Manejado por AttackComponent
-@onready var attack_hitbox: Area2D = $AttackHitbox
+# AttackHitbox ahora está en HitboxContainer, manejado por AnimationPlayer
+# @onready var attack_hitbox: Area2D = $AttackHitbox
 
 ## Sistema de inventario
 ## Escucha eventos de EventBus para recoger items
@@ -136,6 +126,10 @@ var stored_velocity: Vector2 = Vector2.ZERO
 ## Sistema de habilidades desbloqueables
 ## Gestiona dash, doble salto, wall jump, etc.
 @onready var ability_system: AbilitySystem = $AbilitySystem
+
+## Máquina de estados del jugador
+## Controla idle, run, jump, fall, attack, etc.
+@onready var state_machine: StateMachine = $StateMachine
 
 ## Sistema de armas
 ## Gestiona armas equipadas, munición, recarga
@@ -218,6 +212,9 @@ func _input(event: InputEvent) -> void:
 			inventory.cycle_fragment_selection(-1)
 
 func _physics_process(delta: float) -> void:
+	# Voltear hitboxes según dirección del jugador
+	_flip_hitboxes()
+	
 	_update_coyote_time(delta)
 	_update_jump_buffer(delta)
 	
@@ -375,7 +372,7 @@ func is_rising() -> bool:
 func _print_component_status() -> void:
 	print("  📦 Componentes:")
 	print("    ✅ Sprite: ", sprite != null)
-	print("    ✅ AttackHitbox: ", attack_hitbox != null)
+	# print("    ✅ AttackHitbox: ", attack_hitbox != null)  # Ya no existe, ahora en HitboxContainer
 	print("    ✅ Inventory: ", inventory != null)
 	print("    ✅ AbilitySystem: ", ability_system != null)
 	print("    ✅ WeaponSystem: ", weapon_system != null)
@@ -395,3 +392,50 @@ func print_stats() -> void:
 	print("  🏃 Velocidad: ", speed)
 	print("  🦘 Saltos: ", jumps_remaining, "/", max_jumps)
 	print("======================")
+
+# ============================================
+# 🎯 SIGNAL HANDLERS - HITBOXES
+# ============================================
+# Estas funciones son llamadas por las señales body_entered de los hitboxes
+# Delegan el procesamiento al AttackComponent
+
+func _on_ground_attack_hitbox_body_entered(body: Node2D) -> void:
+	if attack_component:
+		attack_component._on_ground_hitbox_entered(body)
+
+func _on_air_attack_hitbox_body_entered(body: Node2D) -> void:
+	if attack_component:
+		attack_component._on_air_hitbox_entered(body)
+
+func _on_pogo_hitbox_body_entered(body: Node2D) -> void:
+	if attack_component:
+		attack_component._on_pogo_hitbox_entered(body)
+
+func _on_launcher_hitbox_body_entered(body: Node2D) -> void:
+	if attack_component:
+		attack_component._on_launcher_hitbox_entered(body)
+
+# ============================================
+# 🎯 VOLTEAR HITBOXES SEGÚN DIRECCIÓN
+# ============================================
+
+## Voltea la posición de los hitboxes según la dirección del sprite
+func _flip_hitboxes() -> void:
+	if not sprite:
+		return
+	
+	var hitbox_container = get_node_or_null("HitboxContainer")
+	if not hitbox_container:
+		return
+	
+	# Para cada hitbox hijo
+	for hitbox in hitbox_container.get_children():
+		if hitbox is Area2D:
+			# Voltear con scale.x en lugar de position
+			# Esto evita conflictos con AnimationPlayer tracks
+			if sprite.flip_h:
+				# Mirando izquierda - voltear hitbox (scale negativo)
+				hitbox.scale.x = -abs(hitbox.scale.x)
+			else:
+				# Mirando derecha - normal (scale positivo)
+				hitbox.scale.x = abs(hitbox.scale.x)

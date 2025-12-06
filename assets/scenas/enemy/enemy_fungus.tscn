@@ -58,11 +58,11 @@ collision_layer = 2
 script = ExtResource("1_lp4q2")
 debug_raycasts = true
 player_knockback = Vector2(100, 100)
+max_health = 100
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Fungus"]
 sprite_frames = SubResource("SpriteFrames_ljdoj")
-animation = &"run"
-frame_progress = 0.7478468
+animation = &"idel"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Fungus"]
 position = Vector2(0, 4.5)

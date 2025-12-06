@@ -2,7 +2,22 @@
 extends Node
 class_name AttackComponent
 
+## ============================================
+## ATTACK COMPONENT - VERSIÓN ARREGLADA
+## ============================================
+
 var player: Player
+
+# Referencias a hitboxes
+var ground_hitbox: Area2D = null
+var air_hitbox: Area2D = null
+var pogo_hitbox: Area2D = null
+var launcher_hitbox: Area2D = null
+
+# Estado actual
+var current_active_hitbox: Area2D = null
+var is_attacking: bool = false
+var enemies_hit_this_attack: Array = []  # 🆕 Evitar golpear múltiples veces
 
 func _ready() -> void:
 	await get_tree().process_frame
@@ -13,214 +28,233 @@ func _ready() -> void:
 		push_error("AttackComponent debe ser hijo de un Player")
 		return
 	
-	if player.attack_hitbox:
-		player.attack_hitbox.monitoring = false
-		if not player.attack_hitbox.body_entered.is_connected(_on_attack_hitbox_body_entered):
-			player.attack_hitbox.body_entered.connect(_on_attack_hitbox_body_entered)
-
-func _physics_process(_delta: float) -> void:
-	if player:
-		update_hitbox_position()
+	# Buscar y conectar hitboxes
+	_find_all_hitboxes()
+	_connect_all_hitboxes()
+	
+	print("✅ AttackComponent inicializado")
+	_print_hitbox_status()
 
 # ============================================
-# 🆕 ACTUALIZAR POSICIÓN (SIN DEBUG)
+# 🔍 BUSCAR Y CONECTAR HITBOXES
 # ============================================
 
-func update_hitbox_position() -> void:
-	if not player or not player.attack_hitbox:
+func _find_all_hitboxes() -> void:
+	var hitbox_container = player.get_node_or_null("HitboxContainer")
+	
+	if not hitbox_container:
+		push_warning("⚠️ HitboxContainer no encontrado")
 		return
 	
-	var collision_shape = player.attack_hitbox.get_node_or_null("CollisionShape2D")
+	ground_hitbox = hitbox_container.get_node_or_null("GroundAttackHitbox")
+	air_hitbox = hitbox_container.get_node_or_null("AirAttackHitbox")
+	pogo_hitbox = hitbox_container.get_node_or_null("PogoHitbox")
+	launcher_hitbox = hitbox_container.get_node_or_null("LauncherHitbox")
 	
-	var weapon = player.get_current_weapon()
-	var offset = weapon.attack_range if weapon else 25.0
-	
-	match player.current_attack_direction:
-		Player.AttackDirection.FORWARD:
-			if player.sprite.flip_h:
-				player.attack_hitbox.position = Vector2(-offset, 0)
-			else:
-				player.attack_hitbox.position = Vector2(offset, 0)
-			
-			if collision_shape:
-				collision_shape.rotation_degrees = 0
-		
-		Player.AttackDirection.UP:
-			player.attack_hitbox.position = Vector2(0, -offset)
-			
-			if collision_shape:
-				collision_shape.rotation_degrees = 90
-		
-		Player.AttackDirection.DOWN:
-			player.attack_hitbox.position = Vector2(0, offset)
-			
-			if collision_shape:
-				collision_shape.rotation_degrees = 90
+	# Los hitboxes ya están disabled por defecto en el .tscn
+	# AnimationPlayer los activará cuando sea necesario
 
-func get_attack_direction() -> Player.AttackDirection:
-	if Input.is_action_pressed("ui_up"):
-		return Player.AttackDirection.UP
-	elif Input.is_action_pressed("ui_down") and not player.is_on_floor():
-		# 🆕 Solo permitir ataque hacia abajo si tiene la Guadaña
-		var weapon = player.get_current_weapon()
-		if weapon and weapon.weapon_id == "scythe":
-			return Player.AttackDirection.DOWN
-		else:
-			return Player.AttackDirection.FORWARD  # Manos atacan horizontal
-	else:
-		return Player.AttackDirection.FORWARD
+func _connect_all_hitboxes() -> void:
+	if ground_hitbox:
+		if not ground_hitbox.body_entered.is_connected(_on_ground_hitbox_entered):
+			ground_hitbox.body_entered.connect(_on_ground_hitbox_entered)
+		print("  ✅ GroundHitbox conectado")
+	
+	if air_hitbox:
+		if not air_hitbox.body_entered.is_connected(_on_air_hitbox_entered):
+			air_hitbox.body_entered.connect(_on_air_hitbox_entered)
+		print("  ✅ AirHitbox conectado")
+	
+	if pogo_hitbox:
+		if not pogo_hitbox.body_entered.is_connected(_on_pogo_hitbox_entered):
+			pogo_hitbox.body_entered.connect(_on_pogo_hitbox_entered)
+		print("  ✅ PogoHitbox conectado")
+	
+	if launcher_hitbox:
+		if not launcher_hitbox.body_entered.is_connected(_on_launcher_hitbox_entered):
+			launcher_hitbox.body_entered.connect(_on_launcher_hitbox_entered)
+		print("  ✅ LauncherHitbox conectado")
+
+func _print_hitbox_status() -> void:
+	print("  📦 Hitboxes encontrados:")
+	print("    Ground: ", ground_hitbox != null)
+	print("    Air: ", air_hitbox != null)
+	print("    Pogo: ", pogo_hitbox != null)
+	print("    Launcher: ", launcher_hitbox != null)
 
 # ============================================
-# CALLBACK DE HITBOX
+# 🎯 CALLBACKS DE HITBOXES
+# ============================================
+# Las señales body_entered de los hitboxes llaman a estas funciones
+# Los hitboxes se activan/desactivan SOLO por AnimationPlayer tracks
+
+func _on_ground_hitbox_entered(body: Node2D) -> void:
+	print("🎯 GroundHitbox detectó: ", body.name)
+	_handle_hit(body, "ground")
+
+func _on_air_hitbox_entered(body: Node2D) -> void:
+	print("🎯 AirHitbox detectó: ", body.name)
+	_handle_hit(body, "air")
+
+func _on_pogo_hitbox_entered(body: Node2D) -> void:
+	print("🎯 PogoHitbox detectó: ", body.name)
+	_handle_hit(body, "pogo")
+
+func _on_launcher_hitbox_entered(body: Node2D) -> void:
+	print("🎯 LauncherHitbox detectó: ", body.name)
+	_handle_hit(body, "launcher")
+
+# ============================================
+# 💥 PROCESAR GOLPE
 # ============================================
 
-func _on_attack_hitbox_body_entered(body: Node2D) -> void:
-	if body == null or not body.is_in_group("enemies"):
+func _handle_hit(body: Node2D, attack_type: String) -> void:
+	if not body.is_in_group("enemies"):
 		return
 	
 	if not body.has_method("take_damage"):
 		return
 	
-	# 🆕 POGO SOLO PARA GUADAÑA
-	if player.current_attack_direction == Player.AttackDirection.DOWN:
-		player.hit_enemy_with_down_attack = true
-		
-		# Solo aplicar pogo si tiene la Guadaña equipada
-		var weapon = player.get_current_weapon()
-		if weapon and weapon.weapon_id == "scythe":
-			player.velocity.y = player.pogo_bounce_force
+	# 🆕 EVITAR GOLPEAR MÚLTIPLES VECES
+	if body in enemies_hit_this_attack:
+		return
 	
-	# Calcular daño con críticos
+	enemies_hit_this_attack.append(body)
+	
+	print("💥 Golpe registrado [", attack_type, "] a ", body.name)
+	
+	# Calcular daño
 	var damage_result = _calculate_damage()
 	var final_damage = damage_result["damage"]
 	var is_critical = damage_result["is_critical"]
 	
-	# 🎯 EMITIR EVENTO DE ATAQUE
-	EventBus.enemy_attacked.emit(final_damage, body, player)
+	if is_critical:
+		print("  ⚡ CRÍTICO! Daño: ", final_damage)
 	
-	# Aplicar daño
-	var knockback = _calculate_knockback(body)
+	# Calcular knockback
+	var knockback = _calculate_knockback(body, attack_type)
+	
+	# Aplicar daño (solo 2 parámetros: damage y knockback)
 	body.take_damage(final_damage, knockback)
 	
-	# 🆕 HIT FREEZE al golpear (congelar pantalla brevemente)
-	_apply_hit_freeze(is_critical)
+	# Efectos especiales según tipo
+	_apply_special_effects(body, attack_type)
 	
-	# 🆕 RETROCESO AL GOLPEAR (DESPUÉS de aplicar daño)
-	_apply_attack_recoil()
-	
-	# Efecto visual de impacto
-	_show_attack_impact(body.global_position)
-	
-	# Life steal en crítico
+	# Life steal en críticos
 	if is_critical and player.lifesteal_on_crit > 0:
-		_apply_lifesteal()
+		_apply_lifesteal(final_damage)
 	
-	# Feedback visual de crítico
-	if is_critical:
-		_show_critical_feedback(body)
+	# Camera shake
+	_apply_camera_shake(is_critical)
 	
-	# Notificar al HealState si está activo
+	# Registrar en HealState si está curándose
 	var state_machine = player.get_node_or_null("StateMachine")
-	if state_machine and state_machine.current_state:
-		if state_machine.current_state is HealState:
-			var heal_state = state_machine.current_state as HealState
-			heal_state.register_hit()
+	if state_machine and state_machine.current_state is HealState:
+		state_machine.current_state.register_hit()
 
 # ============================================
-# 🆕 RETROCESO AL GOLPEAR (ESTILO HOLLOW KNIGHT)
-# ============================================
-
-func _apply_attack_recoil() -> void:
-	var weapon = player.get_current_weapon()
-	if not weapon:
-		return
-	
-	# Retroceso hacia atrás al golpear (como Hollow Knight)
-	if player.current_attack_direction == Player.AttackDirection.FORWARD:
-		var knockback_force = 120.0 if weapon.weapon_id == "scythe" else 80.0
-		# Aplicar en dirección OPUESTA a donde mira el sprite
-		if player.sprite.flip_h:
-			player.velocity.x += knockback_force  # Mira izquierda, empujar a la derecha
-		else:
-			player.velocity.x -= knockback_force  # Mira derecha, empujar a la izquierda
-
-# ============================================
-# CALCULAR DAÑO
+# 📊 CÁLCULOS
 # ============================================
 
 func _calculate_damage() -> Dictionary:
-	var base_damage = player.attack_damage
-	var is_crit = randf() < player.crit_chance
+	var weapon = player.get_current_weapon()
+	var base_damage = weapon.base_damage if weapon else player.base_attack_damage
+	
+	# 🐛 DEBUG
+	print("🔍 DEBUG _calculate_damage:")
+	print("  Weapon: ", weapon)
+	if weapon:
+		print("  Weapon base_damage: ", weapon.base_damage)
+	print("  Player base_attack_damage: ", player.base_attack_damage)
+	print("  Calculated base_damage: ", base_damage)
+	
+	var total_crit_chance = player.base_crit_chance
+	if weapon:
+		total_crit_chance += weapon.crit_chance_bonus
+	
+	var is_crit = randf() < total_crit_chance
 	
 	var final_damage = base_damage
 	if is_crit:
-		final_damage = int(base_damage * player.crit_multiplier)
+		var crit_mult = player.base_crit_multiplier
+		if weapon:
+			crit_mult += weapon.crit_multiplier_bonus
+		final_damage = int(base_damage * crit_mult)
+	
+	print("  Final damage: ", final_damage)
+	print("  Is critical: ", is_crit)
 	
 	return {
 		"damage": final_damage,
 		"is_critical": is_crit
 	}
 
-func _apply_lifesteal() -> void:
-	var health_component = player.get_node_or_null("HealthComponent") as HealthComponent
+func _calculate_knockback(body: Node2D, attack_type: String) -> Vector2:
+	var knockback = Vector2.ZERO
+	
+	match attack_type:
+		"ground":
+			knockback = Vector2(200, -100)
+		"air":
+			knockback = Vector2(150, -150)
+		"pogo":
+			knockback = Vector2(0, 300)
+		"launcher":
+			knockback = Vector2(0, -400)
+	
+	var dir = (body.global_position - player.global_position).normalized()
+	knockback.x = abs(knockback.x) * sign(dir.x)
+	
+	return knockback
+
+# ============================================
+# ✨ EFECTOS ESPECIALES
+# ============================================
+
+func _apply_special_effects(_body: Node2D, attack_type: String) -> void:
+	match attack_type:
+		"pogo":
+			# Rebote del player
+			player.velocity.y = -400.0
+			player.hit_enemy_with_down_attack = true
+			print("  🦘 POGO BOUNCE!")
+		
+		"launcher":
+			# Impulsar al player
+			player.velocity.y = -300
+			print("  🚀 LAUNCHER!")
+
+func _apply_lifesteal(damage: int) -> void:
+	var health_component = player.get_health_component()
 	
 	if health_component and player.health < player.max_health:
-		var old_health = player.health
-		player.health = min(player.max_health, player.health + player.lifesteal_on_crit)
-		health_component._update_health_bar()
-		
-		var healed = player.health - old_health
-		if healed > 0 and player.sprite:
-			player.sprite.modulate = Color(0.3, 1, 0.3)
-			await get_tree().create_timer(0.1).timeout
-			if is_instance_valid(player) and player.sprite:
-				player.sprite.modulate = Color(1, 1, 1)
+		var heal_amount = max(1, int(damage * 0.2))
+		health_component.heal(heal_amount)
+		print("  💚 Life Steal: +", heal_amount, " HP")
 
-func _show_critical_feedback(enemy: Node2D) -> void:
-	var enemy_sprite = enemy.get_node_or_null("AnimatedSprite2D")
-	if enemy_sprite:
-		enemy_sprite.modulate = Color(1, 1, 0)
-		await get_tree().create_timer(0.15).timeout
-		if is_instance_valid(enemy) and enemy_sprite:
-			enemy_sprite.modulate = Color(1, 1, 1)
-
-func _show_attack_impact(hit_position: Vector2) -> void:
-	var vfx_manager = player.get_node_or_null("VFXManager") as VFXManager
-	if not vfx_manager:
-		return
-	
-	var offset = hit_position - player.global_position
-	var direction = (hit_position - player.global_position).normalized()
-	
-	vfx_manager.play_attack_impact(offset, direction)
-
-func _calculate_knockback(enemy: Node2D) -> Vector2:
-	var weapon = player.get_current_weapon()
-	var knockback_force = weapon.knockback_force if weapon else Vector2(400, -200)
-	
-	match player.current_attack_direction:
-		Player.AttackDirection.FORWARD:
-			var direction = (enemy.global_position - player.global_position).normalized()
-			return Vector2(
-				direction.x * knockback_force.x,
-				knockback_force.y
-			)
-		
-		Player.AttackDirection.UP:
-			return Vector2(0, -knockback_force.x * 0.8)
-		
-		Player.AttackDirection.DOWN:
-			return Vector2(0, knockback_force.x * 0.6)
-	
-	return Vector2.ZERO
+func _apply_camera_shake(is_critical: bool) -> void:
+	var camera = player.get_node_or_null("Camera2D") as CameraController
+	if camera and camera.has_method("shake_camera"):
+		var intensity = 20.0 if is_critical else 10.0
+		camera.shake_camera(intensity, 0.2)
 
 # ============================================
-# 🆕 HIT FREEZE (CONGELAR PANTALLA AL GOLPEAR)
+# 🎮 API PÚBLICA
 # ============================================
 
-func _apply_hit_freeze(is_critical: bool = false) -> void:
-	# 🆕 Usar FreezeManager centralizado
-	if is_critical:
-		FreezeManager.apply_hit_freeze_critical()
+## Detectar dirección de ataque según input
+func get_attack_direction() -> Player.AttackDirection:
+	if Input.is_action_pressed("ui_up"):
+		return Player.AttackDirection.UP
+	elif Input.is_action_pressed("ui_down") and not player.is_on_floor():
+		var weapon = player.get_current_weapon()
+		if weapon and weapon.weapon_id == "scythe":
+			return Player.AttackDirection.DOWN
+		else:
+			return Player.AttackDirection.FORWARD
 	else:
-		FreezeManager.apply_hit_freeze_normal()
+		return Player.AttackDirection.FORWARD
+
+## Verificar si está atacando
+func is_currently_attacking() -> bool:
+	return is_attacking
