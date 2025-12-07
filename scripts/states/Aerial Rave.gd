@@ -1,6 +1,4 @@
-# res://scripts/states/AttackState.gd
 extends PlayerStateBase
-class_name AttackState
 
 var attack_component: AttackComponent
 var combo_system: ComboSystem
@@ -12,6 +10,13 @@ var exit_timer: float = 0.0
 var max_attack_duration: float = 3.0
 var time_in_state: float = 0.0
 
+# 🆕 AERIAL RAVE (DMC STYLE)
+var is_aerial_attacking: bool = false
+var aerial_freeze_active: bool = false
+var aerial_freeze_timer: float = 0.0
+const AERIAL_FREEZE_DURATION: float = 0.3  # Tiempo flotando por golpe
+const AERIAL_FALL_SPEED: float = 50.0      # Caída lenta después del golpe
+
 func start():
 	print("\n=== ATTACK STATE START ===")
 	attack_component = player.get_node("AttackComponent") as AttackComponent
@@ -20,6 +25,9 @@ func start():
 	should_exit = false
 	exit_timer = 0.0
 	time_in_state = 0.0
+	is_aerial_attacking = false
+	aerial_freeze_active = false
+	aerial_freeze_timer = 0.0
 	
 	# Verificar si ya está atacando
 	if combo_system and combo_system.is_currently_attacking():
@@ -66,7 +74,7 @@ func _handle_melee_attack() -> void:
 		state_machine.change_to("idle")
 		return
 	
-	# 🆕 DETECTAR DIRECCIÓN DEL ATAQUE
+	# Detectar dirección del ataque
 	player.current_attack_direction = attack_component.get_attack_direction()
 	
 	print("  🎯 Dirección detectada: ", player.current_attack_direction)
@@ -79,8 +87,11 @@ func _handle_melee_attack() -> void:
 				print("    → Ground Attack")
 				success = combo_system.try_attack()
 			else:
-				print("    → Air Attack")
+				print("    → Air Attack (DMC Style)")
 				success = combo_system.try_air_attack()
+				# 🆕 ACTIVAR AERIAL RAVE
+				if success:
+					_start_aerial_rave()
 		
 		Player.AttackDirection.UP:
 			print("    → Launcher Attack")
@@ -94,6 +105,33 @@ func _handle_melee_attack() -> void:
 		print("  ⚠️ No se pudo ejecutar ataque")
 		should_exit = true
 		exit_timer = 0.1
+
+# 🆕 ACTIVAR AERIAL RAVE (Estilo DMC)
+func _start_aerial_rave() -> void:
+	print("✨ AERIAL RAVE ACTIVADO")
+	is_aerial_attacking = true
+	aerial_freeze_active = true
+	aerial_freeze_timer = AERIAL_FREEZE_DURATION
+	
+	# Detener caída completamente
+	player.velocity.y = 0
+	
+	# Efecto visual (opcional)
+	if player.sprite:
+		player.sprite.modulate = Color(0.7, 0.9, 1.0)  # Azul claro
+
+# 🆕 DESACTIVAR AERIAL RAVE
+func _end_aerial_rave() -> void:
+	print("❄️ AERIAL RAVE TERMINADO")
+	aerial_freeze_active = false
+	aerial_freeze_timer = 0.0
+	
+	# Empezar caída lenta
+	player.velocity.y = AERIAL_FALL_SPEED
+	
+	# Restaurar color
+	if player.sprite:
+		player.sprite.modulate = Color(1, 1, 1)
 
 func on_physics_process(delta: float) -> void:
 	# RED DE SEGURIDAD
@@ -111,6 +149,36 @@ func on_physics_process(delta: float) -> void:
 		if exit_timer <= 0:
 			_transition_out()
 			return
+	
+	# 🆕 MANEJAR AERIAL RAVE
+	if is_aerial_attacking and aerial_freeze_active:
+		aerial_freeze_timer -= delta
+		
+		# Mantener flotando
+		player.velocity.y = 0
+		
+		# Control horizontal limitado (50%)
+		var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
+		if input_dir != 0:
+			var target_speed = input_dir * player.speed * 0.5
+			player.velocity.x = move_toward(player.velocity.x, target_speed, player.acceleration * 0.5 * delta)
+			update_sprite_flip(input_dir)
+		
+		player.move_and_slide()
+		
+		# Terminar freeze
+		if aerial_freeze_timer <= 0:
+			_end_aerial_rave()
+		
+		# Si presiona X de nuevo durante aerial rave, extender combo
+		if Input.is_action_just_pressed("attack") and combo_system:
+			if combo_system.try_air_attack():
+				# Reiniciar freeze para siguiente golpe
+				aerial_freeze_timer = AERIAL_FREEZE_DURATION
+				player.velocity.y = 0
+				print("  🔄 Aerial Rave extendido")
+		
+		return
 	
 	# Spam de input (ComboSystem lo maneja)
 	if Input.is_action_just_pressed("attack") and combo_system:
@@ -130,6 +198,9 @@ func on_physics_process(delta: float) -> void:
 	# Física según tipo
 	if is_ranged_attack:
 		_handle_ranged_physics(delta)
+	elif is_aerial_attacking and not aerial_freeze_active:
+		# Caída lenta después de aerial rave
+		_handle_aerial_physics(delta)
 	else:
 		match player.current_attack_direction:
 			Player.AttackDirection.FORWARD:
@@ -145,6 +216,10 @@ func on_physics_process(delta: float) -> void:
 		_transition_out()
 
 func _transition_out() -> void:
+	# Resetear aerial rave
+	is_aerial_attacking = false
+	aerial_freeze_active = false
+	
 	if player.is_on_floor():
 		var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 		if input_dir != 0:
@@ -170,10 +245,24 @@ func _handle_ranged_physics(delta: float) -> void:
 	
 	player.move_and_slide()
 
+# 🆕 FÍSICA DURANTE AERIAL RAVE (caída lenta)
+func _handle_aerial_physics(delta: float) -> void:
+	var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
+	
+	# Control horizontal (70%)
+	if input_dir != 0:
+		var target_speed = input_dir * player.speed * 0.7
+		player.velocity.x = move_toward(player.velocity.x, target_speed, player.acceleration * 0.7 * delta)
+		update_sprite_flip(input_dir)
+	
+	# Caída lenta constante
+	player.velocity.y = AERIAL_FALL_SPEED
+	
+	player.move_and_slide()
+
 func _handle_forward_attack(delta: float) -> void:
 	var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 	
-	# 🆕 CONTROL MEJORADO EN EL AIRE
 	if not player.is_on_floor():
 		# En el aire: control reducido (70%)
 		if input_dir != 0:
@@ -194,7 +283,6 @@ func _handle_forward_attack(delta: float) -> void:
 func _handle_up_attack(delta: float) -> void:
 	var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 	
-	# Control completo en launcher
 	if input_dir != 0:
 		var target_speed = input_dir * player.speed * 0.8
 		player.velocity.x = move_toward(player.velocity.x, target_speed, player.acceleration * delta)
@@ -203,7 +291,6 @@ func _handle_up_attack(delta: float) -> void:
 	player.move_and_slide()
 
 func _handle_down_attack(delta: float) -> void:
-	# Pogo: control reducido si no golpeó
 	if player.hit_enemy_with_down_attack:
 		var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 		var target_speed = input_dir * player.speed * 0.7
@@ -224,3 +311,6 @@ func end():
 	should_exit = false
 	exit_timer = 0.0
 	time_in_state = 0.0
+	is_aerial_attacking = false
+	aerial_freeze_active = false
+	aerial_freeze_timer = 0.0

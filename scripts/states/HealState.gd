@@ -10,10 +10,8 @@ var hits_remaining: int = 0
 var heal_per_hit: int = 1
 var healing_timer: float = 0.0
 var attack_animation_timer: float = 0.0
-var attack_hitbox_timer: float = 0.0
 var attack_cooldown_timer: float = 0.0
 var is_attacking: bool = false
-var hitbox_active: bool = false
 var ending_healing: bool = false
 var attack_requested: bool = false
 var end_transition_delay: float = 0.0
@@ -27,24 +25,23 @@ var dash_duration: float = 0.15
 var dash_cooldown: float = 0.8
 var dash_direction: Vector2 = Vector2.ZERO
 
+# 🆕 REFERENCIAS A HITBOXES
+var ground_hitbox: Area2D = null
+
 func start():
-	
 	var active_fragment = player.active_healing_fragment
 	
 	if not active_fragment:
 		state_machine.change_to("idle")
 		return
 	
-	# 🆕 CAMBIAR A ARMA MELEE SI TIENE ARMA DE RANGO
 	_ensure_melee_weapon()
 	
 	hits_remaining = active_fragment.hits_required
 	healing_timer = healing_duration
 	attack_animation_timer = 0.0
-	attack_hitbox_timer = 0.0
 	attack_cooldown_timer = 0.0
 	is_attacking = false
-	hitbox_active = false
 	ending_healing = false
 	attack_requested = false
 	end_transition_delay = 0.0
@@ -54,20 +51,24 @@ func start():
 	
 	player.is_in_healing_mode = true
 	
-	# 🆕 ACTIVAR AURA DE CURACIÓN VÍA VFXManager
+	# 🆕 OBTENER HITBOX
+	var hitbox_container = player.get_node_or_null("HitboxContainer")
+	if hitbox_container:
+		ground_hitbox = hitbox_container.get_node_or_null("GroundAttackHitbox")
+		if ground_hitbox:
+			print("  ✅ GroundHitbox encontrado para curación")
+		else:
+			push_error("  ❌ GroundAttackHitbox no encontrado")
+	
+	# Activar aura
 	var vfx_manager = player.get_node_or_null("VFXManager") as VFXManager
 	if vfx_manager:
 		vfx_manager.activate_healing_aura()
-		print("✨ Aura de curación activada")
-	else:
-		push_warning("⚠️ VFXManager no encontrado en Player")
 	
 	print("🩹 Modo Curación activado!")
 	print("  ⚔️ Golpes disponibles: ", hits_remaining)
 	print("  ⏱️ Tiempo límite: ", healing_duration, " segundos")
-	print("  💨 Puedes usar dash (C) mientras te curas")
 
-# 🆕 ASEGURAR QUE TENGA ARMA MELEE EQUIPADA
 func _ensure_melee_weapon() -> void:
 	var weapon_system = player.get_node_or_null("WeaponSystem") as WeaponSystem
 	if not weapon_system:
@@ -79,11 +80,9 @@ func _ensure_melee_weapon() -> void:
 		state_machine.change_to("idle")
 		return
 	
-	# Si tiene arma de rango, cambiar a melee
 	if current_weapon.has_projectile:
 		print("🔄 Arma de rango detectada, cambiando a melee...")
 		
-		# Prioridad: Guadaña
 		if weapon_system.has_weapon("scythe"):
 			var scythe = WeaponDB.get_weapon("scythe")
 			if scythe:
@@ -91,7 +90,6 @@ func _ensure_melee_weapon() -> void:
 				print("  ✅ Cambiado a: Guadaña Espectral")
 				return
 		
-		# Si no tiene guadaña, cancelar curación
 		print("  ⚠️ No hay arma melee disponible - curación cancelada")
 		state_machine.change_to("idle")
 
@@ -99,7 +97,6 @@ func on_input(event: InputEvent) -> void:
 	if event.is_action_pressed("attack") and not is_attacking and attack_cooldown_timer <= 0:
 		attack_requested = true
 	
-	# Detectar dash (C)
 	if event.is_action_pressed("dash"):
 		if dash_cooldown_timer > 0:
 			print("⏱️ Dash en cooldown: %.1f" % dash_cooldown_timer, "s")
@@ -110,12 +107,9 @@ func on_input(event: InputEvent) -> void:
 			_start_dash()
 
 func on_physics_process(delta: float) -> void:
-	
-	# Actualizar cooldown del dash
 	if dash_cooldown_timer > 0:
 		dash_cooldown_timer -= delta
 	
-	# Si estamos en transición de salida, solo esperar
 	if ending_healing:
 		if end_transition_delay > 0:
 			end_transition_delay -= delta
@@ -123,29 +117,22 @@ func on_physics_process(delta: float) -> void:
 				_do_state_transition()
 		return
 	
-	# Manejar dash si está activo
 	if is_dashing:
 		_process_dash(delta)
 		return
 	
-	# Actualizar timers
 	healing_timer -= delta
 	
 	if attack_animation_timer > 0:
 		attack_animation_timer -= delta
 		if attack_animation_timer <= 0:
 			is_attacking = false
+			_deactivate_hitbox()  # 🆕 Desactivar hitbox al terminar
 			_restore_movement_animation()
-	
-	if attack_hitbox_timer > 0:
-		attack_hitbox_timer -= delta
-		if attack_hitbox_timer <= 0:
-			_deactivate_hitbox()
 	
 	if attack_cooldown_timer > 0:
 		attack_cooldown_timer -= delta
 	
-	# Verificar condiciones de fin
 	if healing_timer <= 0:
 		_end_healing("Tiempo agotado")
 		return
@@ -154,11 +141,10 @@ func on_physics_process(delta: float) -> void:
 		_end_healing("Todos los golpes usados")
 		return
 	
-	# 🆕 ACTUALIZAR ANIMACIÓN DE MOVIMIENTO (sin tocar el aura)
 	if not is_attacking:
 		_update_movement_animation()
 	
-	# Movimiento (normal)
+	# Movimiento
 	var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
 	var target_speed = input_dir * player.speed
 	
@@ -167,12 +153,10 @@ func on_physics_process(delta: float) -> void:
 	elif target_speed < player.velocity.x:
 		player.velocity.x = max(player.velocity.x - player.acceleration * delta, target_speed)
 	
-	# 🆕 Solo cambiar flip si hay INPUT del jugador (no por retroceso)
 	if input_dir > 0:
 		player.sprite.flip_h = false
 	elif input_dir < 0:
 		player.sprite.flip_h = true
-	# Si no hay input, mantener la dirección actual
 	
 	if input_dir == 0 and abs(player.velocity.x) > 0:
 		var dec = player.friction * delta
@@ -194,21 +178,17 @@ func on_physics_process(delta: float) -> void:
 		else:
 			player.is_jumping = false
 	
-	# Procesar ataque solicitado
+	# Procesar ataque
 	if attack_requested and not is_attacking and attack_cooldown_timer <= 0:
 		attack_requested = false
 		_start_attack()
 	
 	player.move_and_slide()
 
-# 🆕 ANIMACIÓN DE MOVIMIENTO CON ARMAS
 func _update_movement_animation() -> void:
-	# Usar AnimationController en lugar de acceder directamente al sprite
-	# Use inherited anim_controller from PlayerStateBase
 	if not anim_controller:
 		return
 	
-	# Determinar animación base según estado
 	var base_anim = ""
 	
 	if not player.is_on_floor():
@@ -222,16 +202,13 @@ func _update_movement_animation() -> void:
 		else:
 			base_anim = "idle"
 	
-	# Reproducir animación usando AnimationController
 	anim_controller.play(base_anim)
 
 func _restore_movement_animation() -> void:
 	_update_movement_animation()
 
-# Iniciar dash dentro del estado de curación
 func _start_dash() -> void:
 	if is_dashing:
-		print("⚠️ Ya estás dasheando")
 		return
 	
 	print("💨 Dash ejecutado (manteniendo curación)")
@@ -239,30 +216,15 @@ func _start_dash() -> void:
 	dash_timer = dash_duration
 	dash_cooldown_timer = dash_cooldown
 	
-	# Obtener dirección
 	var input_dir = player.get_movement_input()
 	if input_dir != 0:
 		dash_direction = Vector2(input_dir, 0).normalized()
 	else:
 		dash_direction = Vector2(-1 if player.sprite.flip_h else 1, 0)
 	
-	# Obtener stats del dash
-	var ability_system = player.get_node_or_null("AbilitySystem") as AbilitySystem
-	if ability_system:
-		var dash_ability = ability_system.get_ability("dash")
-		if dash_ability and dash_ability is ActiveAbility:
-			var active_dash = dash_ability as ActiveAbility
-			dash_speed = active_dash.dash_speed
-			dash_duration = active_dash.dash_duration
-			dash_cooldown = active_dash.cooldown
-			dash_timer = dash_duration
-			dash_cooldown_timer = dash_cooldown
-	
-	# Aplicar velocidad
 	player.velocity = dash_direction * dash_speed
 	player.invulnerable = true
 
-# Procesar dash mientras está en HealState
 func _process_dash(delta: float) -> void:
 	dash_timer -= delta
 	
@@ -271,7 +233,6 @@ func _process_dash(delta: float) -> void:
 	
 	player.move_and_slide()
 	
-	# Terminar dash
 	if dash_timer <= 0:
 		print("✅ Dash terminado - Curación continúa")
 		is_dashing = false
@@ -282,39 +243,60 @@ func _start_attack() -> void:
 	if is_attacking:
 		return
 	
+	print("⚔️ HealState: Iniciando ataque")
+	
 	is_attacking = true
 	attack_animation_timer = attack_duration
-	attack_hitbox_timer = attack_duration
 	attack_cooldown_timer = attack_cooldown
 	
-	# Usar ComboSystem para manejar el ataque correctamente
-	var combo_system = player.get_node_or_null("ComboSystem") as ComboSystem
-	if combo_system:
-		# Intentar ejecutar ataque a través del ComboSystem
-		combo_system.try_attack()
-	else:
-		# Fallback: usar AnimationController directamente
-		# Use inherited anim_controller from PlayerStateBase
-		if anim_controller:
-			anim_controller.play("attack_ground_1")
-
-func _activate_hitbox() -> void:
-	# Los hitboxes ahora son manejados automáticamente por AnimationPlayer
-	# No necesitamos hacer nada aquí
-	pass
-
-func _deactivate_hitbox() -> void:
-	# Los hitboxes ahora son manejados automáticamente por AnimationPlayer
-	# No necesitamos hacer nada aquí
-	pass
-
-func register_hit() -> void:
+	# 🆕 ACTIVAR HITBOX MANUALMENTE
+	_activate_hitbox()
 	
-	if not hitbox_active or ending_healing:
+	# Reproducir animación
+	if anim_controller:
+		# Obtener arma actual
+		var weapon = player.get_current_weapon()
+		var anim_name = "attack"
+		
+		if weapon and weapon.weapon_id == "scythe":
+			anim_name = "scythe_attack_1"
+		
+		print("  🎬 Reproduciendo: ", anim_name)
+		anim_controller.play(anim_name)
+
+# 🆕 ACTIVAR HITBOX MANUALMENTE
+func _activate_hitbox() -> void:
+	if not ground_hitbox:
+		print("  ❌ No hay hitbox para activar")
 		return
 	
-	print("🎯 register_hit() aceptado")
+	# Limpiar lista de enemigos golpeados
+	if player.attack_component:
+		player.attack_component.enemies_hit_this_attack.clear()
+		print("  🔄 Lista de golpes limpiada")
 	
+	# Activar hitbox
+	ground_hitbox.monitoring = true
+	ground_hitbox.monitorable = true
+	print("  ✅ Hitbox activado")
+
+# 🆕 DESACTIVAR HITBOX MANUALMENTE
+func _deactivate_hitbox() -> void:
+	if not ground_hitbox:
+		return
+	
+	ground_hitbox.monitoring = false
+	ground_hitbox.monitorable = false
+	print("  ❌ Hitbox desactivado")
+
+# 🆕 REGISTRAR GOLPE (llamado desde AttackComponent)
+func register_hit() -> void:
+	if not is_attacking or ending_healing:
+		return
+	
+	print("🎯 register_hit() - Golpe aceptado en HealState")
+	
+	# Curar al jugador
 	var health_component = player.get_node_or_null("HealthComponent") as HealthComponent
 	if health_component and player.health < player.max_health:
 		var old_health = player.health
@@ -323,7 +305,7 @@ func register_hit() -> void:
 		
 		var healed = player.health - old_health
 		if healed > 0:
-			print("💚 +", healed, " HP | Golpes: ", hits_remaining - 1)
+			print("💚 +", healed, " HP | Golpes restantes: ", hits_remaining - 1)
 	
 	hits_remaining -= 1
 	
@@ -343,21 +325,19 @@ func _end_healing(reason: String) -> void:
 	player.active_healing_fragment = null
 	is_attacking = false
 	attack_animation_timer = 0.0
-	attack_hitbox_timer = 0.0
 	attack_cooldown_timer = 0.0
 	attack_requested = false
 	is_dashing = false
 	dash_timer = 0.0
 	dash_cooldown_timer = 0.0
 	
-	# Hitboxes manejados por AnimationPlayer
-	hitbox_active = false
+	# Desactivar hitbox
+	_deactivate_hitbox()
 	
-	# 🆕 DESACTIVAR AURA VÍA VFXManager
+	# Desactivar aura
 	var vfx_manager = player.get_node_or_null("VFXManager") as VFXManager
 	if vfx_manager:
 		vfx_manager.deactivate_healing_aura()
-		print("❌ Aura de curación desactivada")
 
 func _do_state_transition() -> void:
 	if not player.is_on_floor():
@@ -368,27 +348,23 @@ func _do_state_transition() -> void:
 		state_machine.change_to("idle")
 
 func end():
-	
 	if not player:
 		return
 	
 	player.is_in_healing_mode = false
-	
-	# Hitboxes manejados por AnimationPlayer
-	
-	player.is_jumping = false
 	player.active_healing_fragment = null
 	
-	# 🆕 ASEGURAR QUE EL AURA SE DESACTIVE
+	# Asegurar que hitbox esté desactivado
+	_deactivate_hitbox()
+	
+	# Desactivar aura
 	var vfx_manager = player.get_node_or_null("VFXManager") as VFXManager
 	if vfx_manager:
 		vfx_manager.deactivate_healing_aura()
 	
 	is_attacking = false
 	attack_animation_timer = 0.0
-	attack_hitbox_timer = 0.0
 	attack_cooldown_timer = 0.0
-	hitbox_active = false
 	ending_healing = false
 	attack_requested = false
 	end_transition_delay = 0.0
