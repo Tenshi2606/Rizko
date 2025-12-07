@@ -3,9 +3,8 @@ class_name AnimationController
 extends Node
 
 ## ============================================
-## ANIMATION CONTROLLER - SIN TRACKS DE HITBOX
+## ANIMATION CONTROLLER - DESACTIVACIÓN GARANTIZADA
 ## ============================================
-## Reproduce animaciones y activa/desactiva hitboxes manualmente
 
 var player: Player
 var animation_player: AnimationPlayer
@@ -16,45 +15,42 @@ var current_animation: String = ""
 var previous_animation: String = ""
 var can_cancel: bool = true
 
-# 🆕 CONTROL MANUAL DE HITBOXES
-var hitbox_active: bool = false
-var hitbox_timer: float = 0.0
-var hitbox_duration: float = 0.0
-
 func _ready() -> void:
 	await get_tree().process_frame
 	
 	if not player:
 		player = get_parent() as Player
 	
-	# Buscar AnimationPlayer
 	animation_player = player.get_node_or_null("AnimationPlayer") as AnimationPlayer
 	
 	if not animation_player:
 		push_error("AnimationController: No se encontró AnimationPlayer")
 		return
 	
-	# Buscar Sprite2D
 	sprite = player.get_node_or_null("Sprite2D") as Sprite2D
 	
 	if not sprite:
 		push_error("AnimationController: No se encontró Sprite2D")
 		return
 	
-	# Buscar AttackComponent
 	attack_component = player.get_node_or_null("AttackComponent") as AttackComponent
 	
-	# 🐛 FIX: NO conectar a animation_finished aquí
-	# ComboSystem ya maneja esto, tener dos callbacks causa conflictos
-	# El callback de AnimationController ya no es necesario
+	# 🆕 CONECTAR A animation_started PARA LIMPIAR
+	if not animation_player.animation_started.is_connected(_on_animation_started):
+		animation_player.animation_started.connect(_on_animation_started)
+		print("  ✅ AnimationController conectado a animation_started")
 	
 	print("✅ AnimationController inicializado")
 
-# ============================================
-# 🎯 ANIMACIONES DE ATAQUE
-# ============================================
-# AnimationPlayer maneja los hitboxes vía tracks
-# Este script solo reproduce las animaciones
+# 🆕 LIMPIAR AL INICIAR NUEVA ANIMACIÓN
+func _on_animation_started(anim_name: String) -> void:
+	if _is_attack_animation(anim_name):
+		print("🎬 Nueva animación iniciada: ", anim_name)
+		
+		# Limpiar lista de enemigos golpeados
+		if attack_component:
+			attack_component.enemies_hit_this_attack.clear()
+			print("  🧹 Lista limpiada al iniciar")
 
 func play(base_name: String, force: bool = false) -> void:
 	if not animation_player:
@@ -67,7 +63,7 @@ func play(base_name: String, force: bool = false) -> void:
 	
 	if not animation_player.has_animation(full_name):
 		if OS.is_debug_build():
-			print("ℹ️ Animación no encontrada: '", full_name, "' - usando base")
+			print("ℹ️ Animación no encontrada: '", full_name, "'")
 		if animation_player.has_animation(base_name):
 			full_name = base_name
 		else:
@@ -77,96 +73,37 @@ func play(base_name: String, force: bool = false) -> void:
 	current_animation = full_name
 	can_cancel = true
 	
-	print("🎬 AnimationController.play():")
-	print("  📝 Base name: ", base_name)
-	print("  🎯 Full name: ", full_name)
-	print("  ✅ AnimationPlayer controlará los hitboxes")
-	
-	# 🆕 Limpiar lista de enemigos golpeados al empezar un ataque
-	if _is_attack_animation(full_name) and attack_component:
-		attack_component.enemies_hit_this_attack.clear()
-		print("  🔄 Lista de golpes limpiada")
+	print("🎬 AnimationController.play(): ", full_name)
 	
 	animation_player.play(full_name)
 
-# ============================================
-# 🔧 PROCESO CONTINUO (YA NO GESTIONA HITBOX)
-# ============================================
-
-func _process(_delta: float) -> void:
-	# Ya no hay gestión manual de hitboxes
-	# AnimationPlayer lo hace todo vía tracks
-	pass
-
-# ============================================
-# 📊 HELPERS
-# ============================================
-
 func _is_attack_animation(anim_name: String) -> bool:
-	return anim_name.contains("attack") or anim_name.contains("scythe")
-
-func _get_attack_type_from_animation(anim_name: String) -> String:
-	if anim_name.contains("launcher"):
-		return "launcher"
-	elif anim_name.contains("pogo"):
-		return "pogo"
-	elif anim_name.contains("air"):
-		return "air"
-	else:
-		return "ground"
-
-func _get_hitbox_duration(attack_type: String) -> float:
-	match attack_type:
-		"ground":
-			return 0.25
-		"air":
-			return 0.3
-		"pogo":
-			return 0.3
-		"launcher":
-			return 0.35
-		_:
-			return 0.3
-
-# ============================================
-# 🗺️ MAPEO DE NOMBRES SIMPLIFICADO
-# ============================================
+	return anim_name.contains("attack") or anim_name.contains("scythe") or anim_name.contains("pogo")
 
 func _get_animation_name(base_name: String) -> String:
 	if not animation_player:
 		return base_name
 	
-	# Si ya tiene prefijo de arma, devolver tal cual
 	if base_name.begins_with("scythe_") or base_name.begins_with("spectral_"):
 		return base_name
 	
-	# Intentar con prefijo de arma PRIMERO
 	var weapon = player.get_current_weapon() if player else null
 	if weapon and weapon.weapon_id:
 		var prefix = weapon.weapon_id + "_"
 		
-		# Solo añadir prefijo a animaciones básicas (idle, run, jump, fall)
 		if base_name in ["idle", "run", "jump", "fall", "land"]:
 			var prefixed_name = prefix + base_name
-			# Verificar si existe la animación con prefijo
 			if animation_player.has_animation(prefixed_name):
 				return prefixed_name
 	
-	# Si la animación base existe, usarla como fallback
 	if animation_player.has_animation(base_name):
 		return base_name
 	
-	# Último fallback
 	return base_name
-
-# ============================================
-# 🎮 API PÚBLICA
-# ============================================
 
 func stop() -> void:
 	if animation_player:
 		animation_player.stop()
-	# AnimationPlayer maneja los hitboxes, no necesitamos desactivarlos manualmente
 
 func pause() -> void:
 	if animation_player:

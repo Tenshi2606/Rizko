@@ -1,9 +1,9 @@
-# res://scripts/player/components/AttackComponent.gd
+# res://scripts/player/components/attack_component.gd
 extends Node
 class_name AttackComponent
 
 ## ============================================
-## ATTACK COMPONENT - VERSIÓN ARREGLADA
+## ATTACK COMPONENT - DETECCIÓN DE DIRECCIONES
 ## ============================================
 
 var player: Player
@@ -13,11 +13,11 @@ var ground_hitbox: Area2D = null
 var air_hitbox: Area2D = null
 var pogo_hitbox: Area2D = null
 var launcher_hitbox: Area2D = null
+var up_slash_hitbox: Area2D = null  # 🆕 NUEVO HITBOX
 
-# Estado actual
 var current_active_hitbox: Area2D = null
 var is_attacking: bool = false
-var enemies_hit_this_attack: Array = []  # 🆕 Evitar golpear múltiples veces
+var enemies_hit_this_attack: Array = []
 
 func _ready() -> void:
 	await get_tree().process_frame
@@ -28,7 +28,6 @@ func _ready() -> void:
 		push_error("AttackComponent debe ser hijo de un Player")
 		return
 	
-	# Buscar y conectar hitboxes
 	_find_all_hitboxes()
 	_connect_all_hitboxes()
 	
@@ -36,7 +35,7 @@ func _ready() -> void:
 	_print_hitbox_status()
 
 # ============================================
-# 🔍 BUSCAR Y CONECTAR HITBOXES
+# 🔍 BUSCAR HITBOXES (INCLUYE UP SLASH)
 # ============================================
 
 func _find_all_hitboxes() -> void:
@@ -50,9 +49,7 @@ func _find_all_hitboxes() -> void:
 	air_hitbox = hitbox_container.get_node_or_null("AirAttackHitbox")
 	pogo_hitbox = hitbox_container.get_node_or_null("PogoHitbox")
 	launcher_hitbox = hitbox_container.get_node_or_null("LauncherHitbox")
-	
-	# Los hitboxes ya están disabled por defecto en el .tscn
-	# AnimationPlayer los activará cuando sea necesario
+	up_slash_hitbox = hitbox_container.get_node_or_null("UpSlashHitbox")  # 🆕
 
 func _connect_all_hitboxes() -> void:
 	if ground_hitbox:
@@ -74,6 +71,12 @@ func _connect_all_hitboxes() -> void:
 		if not launcher_hitbox.body_entered.is_connected(_on_launcher_hitbox_entered):
 			launcher_hitbox.body_entered.connect(_on_launcher_hitbox_entered)
 		print("  ✅ LauncherHitbox conectado")
+	
+	# 🆕 CONECTAR UP SLASH
+	if up_slash_hitbox:
+		if not up_slash_hitbox.body_entered.is_connected(_on_up_slash_hitbox_entered):
+			up_slash_hitbox.body_entered.connect(_on_up_slash_hitbox_entered)
+		print("  ✅ UpSlashHitbox conectado")
 
 func _print_hitbox_status() -> void:
 	print("  📦 Hitboxes encontrados:")
@@ -81,12 +84,11 @@ func _print_hitbox_status() -> void:
 	print("    Air: ", air_hitbox != null)
 	print("    Pogo: ", pogo_hitbox != null)
 	print("    Launcher: ", launcher_hitbox != null)
+	print("    UpSlash: ", up_slash_hitbox != null, " 🆕")
 
 # ============================================
 # 🎯 CALLBACKS DE HITBOXES
 # ============================================
-# Las señales body_entered de los hitboxes llaman a estas funciones
-# Los hitboxes se activan/desactivan SOLO por AnimationPlayer tracks
 
 func _on_ground_hitbox_entered(body: Node2D) -> void:
 	print("🎯 GroundHitbox detectó: ", body.name)
@@ -104,6 +106,11 @@ func _on_launcher_hitbox_entered(body: Node2D) -> void:
 	print("🎯 LauncherHitbox detectó: ", body.name)
 	_handle_hit(body, "launcher")
 
+# 🆕 CALLBACK UP SLASH
+func _on_up_slash_hitbox_entered(body: Node2D) -> void:
+	print("🎯 UpSlashHitbox detectó: ", body.name)
+	_handle_hit(body, "up_slash")
+
 # ============================================
 # 💥 PROCESAR GOLPE
 # ============================================
@@ -115,15 +122,13 @@ func _handle_hit(body: Node2D, attack_type: String) -> void:
 	if not body.has_method("take_damage"):
 		return
 	
-	# 🆕 EVITAR GOLPEAR MÚLTIPLES VECES
 	if body in enemies_hit_this_attack:
 		return
 	
 	enemies_hit_this_attack.append(body)
 	
-	print("💥 Golpe registrado [", attack_type, "] a ", body.name)
+	print("💥 Golpe [", attack_type, "] a ", body.name)
 	
-	# Calcular daño
 	var damage_result = _calculate_damage()
 	var final_damage = damage_result["damage"]
 	var is_critical = damage_result["is_critical"]
@@ -131,23 +136,17 @@ func _handle_hit(body: Node2D, attack_type: String) -> void:
 	if is_critical:
 		print("  ⚡ CRÍTICO! Daño: ", final_damage)
 	
-	# Calcular knockback
 	var knockback = _calculate_knockback(body, attack_type)
 	
-	# Aplicar daño (solo 2 parámetros: damage y knockback)
 	body.take_damage(final_damage, knockback)
 	
-	# Efectos especiales según tipo
 	_apply_special_effects(body, attack_type)
 	
-	# Life steal en críticos
 	if is_critical and player.lifesteal_on_crit > 0:
 		_apply_lifesteal(final_damage)
 	
-	# Camera shake
 	_apply_camera_shake(is_critical)
 	
-	# Registrar en HealState si está curándose
 	var state_machine = player.get_node_or_null("StateMachine")
 	if state_machine and state_machine.current_state is HealState:
 		state_machine.current_state.register_hit()
@@ -159,14 +158,6 @@ func _handle_hit(body: Node2D, attack_type: String) -> void:
 func _calculate_damage() -> Dictionary:
 	var weapon = player.get_current_weapon()
 	var base_damage = weapon.base_damage if weapon else player.base_attack_damage
-	
-	# 🐛 DEBUG
-	print("🔍 DEBUG _calculate_damage:")
-	print("  Weapon: ", weapon)
-	if weapon:
-		print("  Weapon base_damage: ", weapon.base_damage)
-	print("  Player base_attack_damage: ", player.base_attack_damage)
-	print("  Calculated base_damage: ", base_damage)
 	
 	var total_crit_chance = player.base_crit_chance
 	if weapon:
@@ -180,9 +171,6 @@ func _calculate_damage() -> Dictionary:
 		if weapon:
 			crit_mult += weapon.crit_multiplier_bonus
 		final_damage = int(base_damage * crit_mult)
-	
-	print("  Final damage: ", final_damage)
-	print("  Is critical: ", is_crit)
 	
 	return {
 		"damage": final_damage,
@@ -200,7 +188,9 @@ func _calculate_knockback(body: Node2D, attack_type: String) -> Vector2:
 		"pogo":
 			knockback = Vector2(0, 300)
 		"launcher":
-			knockback = Vector2(0, -400)
+			knockback = Vector2(0, -450)  # 🆕 Más fuerte que up_slash
+		"up_slash":
+			knockback = Vector2(50, -250)  # 🆕 Knockback diagonal
 	
 	var dir = (body.global_position - player.global_position).normalized()
 	knockback.x = abs(knockback.x) * sign(dir.x)
@@ -214,24 +204,32 @@ func _calculate_knockback(body: Node2D, attack_type: String) -> Vector2:
 func _apply_special_effects(body: Node2D, attack_type: String) -> void:
 	match attack_type:
 		"pogo":
-			# 🆕 REBOTE INSTANTÁNEO Y FUERTE
-			player.velocity.y = -450.0  # Rebote fuerte (ajusta según necesites)
+			player.velocity.y = -450.0
 			player.hit_enemy_with_down_attack = true
 			
-			# Feedback visual
 			var camera = player.get_node_or_null("Camera2D") as CameraController
 			if camera and camera.has_method("shake_camera"):
 				camera.shake_camera(15.0, 0.2)
 			
 			print("  🦘 POGO BOUNCE! velocity.y = ", player.velocity.y)
-			
-			# 🆕 EMITIR EVENTO
 			EventBus.pogo_bounce.emit(body)
 		
 		"launcher":
-			# Impulsar al player
-			player.velocity.y = -300
-			print("  🚀 LAUNCHER!")
+			# 🆕 LAUNCHER - Impulsar al player hacia arriba
+			player.velocity.y = -350
+			print("  🚀 LAUNCHER! Player impulsado")
+			
+			# 🆕 Aplicar fuerza de lanzamiento al enemigo
+			if body.has_method("apply_launch_force"):
+				body.apply_launch_force(Vector2(0, -500))
+			
+			EventBus.enemy_launched.emit(body)
+		
+		"up_slash":
+			# 🆕 UP SLASH - Impulso leve
+			if not player.is_on_floor():
+				player.velocity.y = max(player.velocity.y, -200)  # Leve impulso
+			print("  ⬆️ UP SLASH!")
 
 func _apply_lifesteal(damage: int) -> void:
 	var health_component = player.get_health_component()
@@ -248,22 +246,27 @@ func _apply_camera_shake(is_critical: bool) -> void:
 		camera.shake_camera(intensity, 0.2)
 
 # ============================================
-# 🎮 API PÚBLICA
+# 🎮 API PÚBLICA - DETECCIÓN DE DIRECCIÓN
 # ============================================
 
-## Detectar dirección de ataque según input
 func get_attack_direction() -> Player.AttackDirection:
-	if Input.is_action_pressed("ui_up"):
-		return Player.AttackDirection.UP
-	elif Input.is_action_pressed("ui_down") and not player.is_on_floor():
-		var weapon = player.get_current_weapon()
-		if weapon and weapon.weapon_id == "scythe":
-			return Player.AttackDirection.DOWN
+	# 🆕 PRIORIDAD 1: DOWN + EN TIERRA = LAUNCHER
+	if Input.is_action_pressed("ui_down"):
+		if player.is_on_floor():
+			print("    🎯 Detectado: LAUNCHER (↓+X en tierra)")
+			return Player.AttackDirection.LAUNCHER
 		else:
-			return Player.AttackDirection.FORWARD
-	else:
-		return Player.AttackDirection.FORWARD
+			print("    🎯 Detectado: POGO (↓+X en aire)")
+			return Player.AttackDirection.DOWN
+	
+	# 🆕 PRIORIDAD 2: UP = UP SLASH
+	if Input.is_action_pressed("ui_up"):
+		print("    🎯 Detectado: UP SLASH (↑+X)")
+		return Player.AttackDirection.UP
+	
+	# DEFAULT: FORWARD
+	print("    🎯 Detectado: FORWARD")
+	return Player.AttackDirection.FORWARD
 
-## Verificar si está atacando
 func is_currently_attacking() -> bool:
 	return is_attacking

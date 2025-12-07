@@ -91,7 +91,12 @@ var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
 var jumps_remaining: int = 1
 
-enum AttackDirection { FORWARD, UP, DOWN }
+enum AttackDirection { 
+	FORWARD,   # Ataque normal
+	UP,        # Up Slash (hacia arriba)
+	DOWN,      # Pogo (en aire) o Launcher (en tierra) 🆕
+	LAUNCHER   # 🆕 NUEVO - Launcher específico
+}
 var current_attack_direction: AttackDirection = AttackDirection.FORWARD
 var hit_enemy_with_down_attack: bool = false
 

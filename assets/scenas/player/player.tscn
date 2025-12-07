@@ -1,4 +1,4 @@
-[gd_scene load_steps=53 format=3 uid="uid://bplldbrxxosix"]
+[gd_scene load_steps=54 format=3 uid="uid://bplldbrxxosix"]
 
 [ext_resource type="Script" uid="uid://k81rdtt3hcp7" path="res://scripts/player/base/Player.gd" id="1_6v1g7"]
 [ext_resource type="Texture2D" uid="uid://tjuaaif6dkfl" path="res://textures/sprites/player/player_spritesheet.png" id="8_cphw5"]
@@ -519,16 +519,19 @@ _data = {
 }
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ljuf7"]
-size = Vector2(17, 27)
+size = Vector2(25.5, 25.75)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tanta"]
 size = Vector2(39, 17.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cam7v"]
-size = Vector2(16.75, 18.5)
+size = Vector2(24.75, 11.25)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3p3td"]
 size = Vector2(51, 52.5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_pteo1"]
+size = Vector2(25, 10)
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_u6omy"]
 light_mode = 2
@@ -570,7 +573,7 @@ collision_mask = 2
 monitorable = false
 
 [node name="AirAttackHitbox" type="CollisionShape2D" parent="HitboxContainer/AirAttackHitbox"]
-position = Vector2(14, 0)
+position = Vector2(18, -0.125)
 shape = SubResource("RectangleShape2D_ljuf7")
 disabled = true
 
@@ -590,7 +593,7 @@ collision_mask = 2
 monitorable = false
 
 [node name="LauncherHitbox" type="CollisionShape2D" parent="HitboxContainer/LauncherHitbox"]
-position = Vector2(14.625, 4)
+position = Vector2(18, 8)
 shape = SubResource("RectangleShape2D_cam7v")
 disabled = true
 
@@ -600,9 +603,18 @@ collision_mask = 2
 monitorable = false
 
 [node name="GroundAttackHitbox" type="CollisionShape2D" parent="HitboxContainer/GroundAttackHitbox"]
-position = Vector2(18.25, 0)
+position = Vector2(18, 0)
 scale = Vector2(0.5, 0.5)
 shape = SubResource("RectangleShape2D_3p3td")
+disabled = true
+
+[node name="Area2D" type="Area2D" parent="HitboxContainer"]
+collision_layer = 2
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitboxContainer/Area2D"]
+position = Vector2(1.5, -18)
+shape = SubResource("RectangleShape2D_pteo1")
 disabled = true
 
 [node name="Camera2D" type="Camera2D" parent="."]
@@ -685,20 +697,19 @@ script = ExtResource("26_u6omy")
 [node name="Luz Dinamica" type="PointLight2D" parent="."]
 z_index = 10
 material = SubResource("CanvasItemMaterial_u6omy")
-position = Vector2(18, -2)
+position = Vector2(2, -3)
 color = Color(0.7666196, 0.76661956, 0.76661956, 1)
-energy = 0.5
 shadow_enabled = true
 texture = ExtResource("27_0ela0")
 texture_scale = 3.0
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(1, -0.9999999)
-scale = Vector2(0.40022212, 0.4358724)
-texture = SubResource("AtlasTexture_cam7v")
+position = Vector2(1, -1.0000001)
+scale = Vector2(0.40022212, 0.44189453)
+texture = ExtResource("28_8qt6n")
 hframes = 11
 vframes = 11
-frame = 88
+frame = 6
 
 [connection signal="body_entered" from="HitboxContainer/AirAttackHitbox" to="." method="_on_air_attack_hitbox_body_entered"]
 [connection signal="body_entered" from="HitboxContainer/PogoHitbox" to="." method="_on_pogo_hitbox_body_entered"]
