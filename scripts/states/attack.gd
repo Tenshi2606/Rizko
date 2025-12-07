@@ -142,20 +142,11 @@ func on_physics_process(delta: float) -> void:
 			Player.AttackDirection.DOWN:
 				_handle_down_attack(delta)
 	
-	# 🆕 VERIFICACIÓN MEJORADA DE SALIDA
+	# 🔧 VERIFICACIÓN DE SALIDA ULTRA-RÁPIDA
 	if combo_system:
-		# Salir SI:
-		# 1. NO está atacando actualmente
-		# 2. NO está en ventana de combo (esperando siguiente golpe)
-		# 3. NO hay input bufferado
-		var can_exit = (
-			not combo_system.is_currently_attacking() and
-			not combo_system.is_in_combo() and
-			not combo_system.input_buffer_active
-		)
-		
-		if can_exit:
-			print("✅ Condiciones de salida cumplidas - Transicionando")
+		# ✅ Salir SI el ComboSystem dice que puede
+		if combo_system.can_exit_attack_state():
+			print("✅ Salida rápida del AttackState")
 			_transition_out()
 
 func _transition_out() -> void:

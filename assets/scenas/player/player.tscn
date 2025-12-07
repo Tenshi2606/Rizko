@@ -1,10 +1,13 @@
-[gd_scene load_steps=50 format=3 uid="uid://bplldbrxxosix"]
+[gd_scene load_steps=53 format=3 uid="uid://bplldbrxxosix"]
 
 [ext_resource type="Script" uid="uid://k81rdtt3hcp7" path="res://scripts/player/base/Player.gd" id="1_6v1g7"]
 [ext_resource type="Texture2D" uid="uid://tjuaaif6dkfl" path="res://textures/sprites/player/player_spritesheet.png" id="8_cphw5"]
 [ext_resource type="Script" uid="uid://cawewaqnjys1g" path="res://scripts/player/components/CameraController.gd" id="9_cphw5"]
 [ext_resource type="Resource" uid="uid://cpy61hmg32oyv" path="res://resources/combos/attacks/Scythe Combo.tres" id="17_u6omy"]
+[ext_resource type="Resource" uid="uid://cx13hvaunbipv" path="res://resources/combos/attacks/Scythe Air Combo.tres" id="18_0ela0"]
+[ext_resource type="Resource" uid="uid://bts8crgcnqsrq" path="res://resources/combos/attacks/Scythe Pogo.tres" id="19_3p3td"]
 [ext_resource type="Script" uid="uid://dtb81qff7bwef" path="res://scripts/player/base/state_machine.gd" id="20_6v1g7"]
+[ext_resource type="Resource" uid="uid://byp1gxsewxf3n" path="res://resources/combos/attacks/Scythe Launcher.tres" id="20_ljuf7"]
 [ext_resource type="Script" uid="uid://bnmxe7gx1yboq" path="res://scripts/states/idel.gd" id="21_xayjp"]
 [ext_resource type="Script" uid="uid://finiugnqbgbv" path="res://scripts/player/components/ComboSystem.gd" id="22_ep0in"]
 [ext_resource type="Script" uid="uid://cpy6syecgmfl6" path="res://scripts/states/jump.gd" id="22_mfog8"]
@@ -32,18 +35,6 @@ size = Vector2(11, 26)
 
 [sub_resource type="Animation" id="Animation_3p3td"]
 length = 0.001
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Sprite2D:frame")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [99]
-}
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_cam7v"]
 atlas = ExtResource("8_cphw5")
@@ -160,7 +151,7 @@ tracks/1/keys = {
 
 [sub_resource type="Animation" id="Animation_vdotp"]
 resource_name = "scythe_attack_1"
-length = 0.8
+length = 0.5
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -180,7 +171,7 @@ tracks/1/path = NodePath("HitboxContainer/GroundAttackHitbox/GroundAttackHitbox:
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.42993593, 0.76666665),
+"times": PackedFloat32Array(0, 0.16666667, 0.4),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
 "values": [true, false, true]
@@ -192,7 +183,7 @@ tracks/2/path = NodePath("Sprite2D:frame")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0.033333335, 0.099999994, 0.19999999, 0.3, 0.4, 0.5, 0.6, 0.6666667, 0.7660404),
+"times": PackedFloat32Array(0, 0.06666667, 0.1, 0.13333334, 0.2, 0.26666668, 0.33333334, 0.4, 0.46666667),
 "transitions": PackedFloat32Array(2, 1, 1, 1, 1, 1, 1, 1, 0.5),
 "update": 1,
 "values": [99, 100, 101, 102, 103, 104, 105, 106, 107]
@@ -200,7 +191,7 @@ tracks/2/keys = {
 
 [sub_resource type="Animation" id="Animation_l2rnc"]
 resource_name = "scythe_attack_2"
-length = 0.8
+length = 0.5
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -220,10 +211,10 @@ tracks/1/path = NodePath("Sprite2D:frame")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.099999994, 0.2, 0.3, 0.4, 0.46666667, 0.53333336, 0.6333333, 0.7, 0.76666665),
-"transitions": PackedFloat32Array(2, 1, 1, 1, 1, 1, 1, 1, 1, 2),
+"times": PackedFloat32Array(0, 0.06666667, 0.13333334, 0.2, 0.26666668, 0.33333334, 0.36666667, 0.43333334, 0.46666667),
+"transitions": PackedFloat32Array(2, 1, 1, 1, 1, 1, 1, 1, 2),
 "update": 1,
-"values": [110, 111, 112, 113, 114, 115, 116, 117, 118, 119]
+"values": [110, 111, 113, 114, 115, 116, 117, 118, 119]
 }
 tracks/2/type = "value"
 tracks/2/imported = false
@@ -232,7 +223,7 @@ tracks/2/path = NodePath("HitboxContainer/GroundAttackHitbox/GroundAttackHitbox:
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.4, 0.76666665),
+"times": PackedFloat32Array(0, 0.2, 0.46666667),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
 "values": [true, false, true]
@@ -240,7 +231,7 @@ tracks/2/keys = {
 
 [sub_resource type="Animation" id="Animation_qc45h"]
 resource_name = "scythe_attack_3"
-length = 0.8
+length = 0.6
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -248,7 +239,7 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.13333334, 0.26666668, 0.4, 0.53333336, 0.6, 0.6666667, 0.73333335),
+"times": PackedFloat32Array(0, 0.13333334, 0.2, 0.26666668, 0.36666667, 0.43333334, 0.5, 0.56666666),
 "transitions": PackedFloat32Array(2, 1, 1, 1, 1, 1, 1, 2),
 "update": 1,
 "values": [99, 100, 101, 102, 103, 104, 105, 106]
@@ -272,7 +263,7 @@ tracks/2/path = NodePath("HitboxContainer/GroundAttackHitbox/GroundAttackHitbox:
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.53333336, 0.76666665),
+"times": PackedFloat32Array(0, 0.36666667, 0.56666666),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
 "values": [true, false, true]
@@ -280,6 +271,7 @@ tracks/2/keys = {
 
 [sub_resource type="Animation" id="Animation_ber0w"]
 resource_name = "scythe_attack_air"
+length = 0.4
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -299,7 +291,7 @@ tracks/1/path = NodePath("Sprite2D:frame")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0.033333335, 0.16666667, 0.3, 0.46666667, 0.6333333, 0.8, 0.9333334),
+"times": PackedFloat32Array(0, 0.06666667, 0.13333334, 0.16666667, 0.23333333, 0.3, 0.36666667),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
 "update": 1,
 "values": [0, 1, 2, 3, 4, 5, 6]
@@ -311,7 +303,7 @@ tracks/2/path = NodePath("HitboxContainer/AirAttackHitbox/AirAttackHitbox:disabl
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.64421326, 0.9325975),
+"times": PackedFloat32Array(0, 0.2, 0.4),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
 "values": [true, false, true]
@@ -358,6 +350,7 @@ tracks/2/keys = {
 
 [sub_resource type="Animation" id="Animation_5v6ai"]
 resource_name = "scythe_attack_pogo"
+length = 0.5
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -377,7 +370,7 @@ tracks/1/path = NodePath("Sprite2D:frame")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.23333333, 0.4, 0.56666666, 0.73333335, 0.93333334),
+"times": PackedFloat32Array(0, 0.1, 0.16666667, 0.23333333, 0.33333334, 0.43333334),
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 1,
 "values": [88, 89, 90, 91, 92, 93]
@@ -389,7 +382,7 @@ tracks/2/path = NodePath("HitboxContainer/PogoHitbox/PogoHitbox:disabled")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.73333335, 0.92794615),
+"times": PackedFloat32Array(0, 0.33333334, 0.46666667),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
 "values": [true, false, true]
@@ -525,16 +518,16 @@ _data = {
 }
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ljuf7"]
-size = Vector2(30, 9)
+size = Vector2(17, 27)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tanta"]
 size = Vector2(39, 13)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cam7v"]
-size = Vector2(20, 8)
+size = Vector2(16.75, 18.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_3p3td"]
-size = Vector2(66, 53)
+size = Vector2(51, 52.5)
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_u6omy"]
 light_mode = 2
@@ -575,7 +568,7 @@ collision_mask = 2
 monitorable = false
 
 [node name="AirAttackHitbox" type="CollisionShape2D" parent="HitboxContainer/AirAttackHitbox"]
-position = Vector2(-30, -26)
+position = Vector2(14, 0)
 shape = SubResource("RectangleShape2D_ljuf7")
 disabled = true
 
@@ -585,7 +578,7 @@ collision_mask = 2
 monitorable = false
 
 [node name="PogoHitbox" type="CollisionShape2D" parent="HitboxContainer/PogoHitbox"]
-position = Vector2(3.5, 19.5)
+position = Vector2(3, 20)
 shape = SubResource("RectangleShape2D_tanta")
 disabled = true
 
@@ -595,7 +588,7 @@ collision_mask = 2
 monitorable = false
 
 [node name="LauncherHitbox" type="CollisionShape2D" parent="HitboxContainer/LauncherHitbox"]
-position = Vector2(1, -17)
+position = Vector2(14.625, 4)
 shape = SubResource("RectangleShape2D_cam7v")
 disabled = true
 
@@ -605,7 +598,8 @@ collision_mask = 2
 monitorable = false
 
 [node name="GroundAttackHitbox" type="CollisionShape2D" parent="HitboxContainer/GroundAttackHitbox"]
-position = Vector2(22, 0)
+visible = false
+position = Vector2(18.25, 0)
 scale = Vector2(0.5, 0.5)
 shape = SubResource("RectangleShape2D_3p3td")
 disabled = true
@@ -656,6 +650,12 @@ script = ExtResource("40_5v6ai")
 [node name="ComboSystem" type="Node" parent="."]
 script = ExtResource("22_ep0in")
 default_combo = ExtResource("17_u6omy")
+weapon_combos = {
+"scythe": null
+}
+air_combo = ExtResource("18_0ela0")
+pogo_combo = ExtResource("19_3p3td")
+launcher_combo = ExtResource("20_ljuf7")
 
 [node name="AttackComponent" type="Node" parent="."]
 script = ExtResource("34_ep0in")
@@ -682,9 +682,10 @@ script = ExtResource("40_qc45h")
 script = ExtResource("26_u6omy")
 
 [node name="Luz Dinamica" type="PointLight2D" parent="."]
+visible = false
 z_index = 10
 material = SubResource("CanvasItemMaterial_u6omy")
-position = Vector2(0, -1)
+position = Vector2(18, -2)
 color = Color(0.7666196, 0.76661956, 0.76661956, 1)
 shadow_enabled = true
 texture = ExtResource("27_0ela0")
@@ -696,7 +697,7 @@ scale = Vector2(0.40022212, 0.4358724)
 texture = SubResource("AtlasTexture_cam7v")
 hframes = 11
 vframes = 11
-frame = 99
+frame = 92
 
 [connection signal="body_entered" from="HitboxContainer/AirAttackHitbox" to="." method="_on_air_attack_hitbox_body_entered"]
 [connection signal="body_entered" from="HitboxContainer/PogoHitbox" to="." method="_on_pogo_hitbox_body_entered"]

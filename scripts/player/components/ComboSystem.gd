@@ -13,7 +13,7 @@ var animation_controller: AnimationController
 # Estado del combo
 var combo_index: int = 0
 var combo_window_timer: float = 0.0
-const COMBO_WINDOW_DURATION: float = 2.0
+const COMBO_WINDOW_DURATION: float = 1.0  # 🔧 Reducido de 2.0s a 1.0s
 var active_combo: ComboData = null
 
 # Sistema de input buffer
@@ -23,8 +23,12 @@ var buffered_attack_type: String = ""
 var can_queue_next: bool = false
 
 # Timing
-const BUFFER_WINDOW: float = 0.4
-const QUEUE_WINDOW_START: float = 0.3
+const BUFFER_WINDOW: float = 0.3  # 🔧 Reducido de 0.4s a 0.3s
+const QUEUE_WINDOW_START: float = 0.4  # 🔧 Aumentado de 0.3s a 0.4s
+
+# 🆕 CONTROL DE SALIDA
+var time_since_animation_end: float = 0.0
+const ATTACK_EXIT_GRACE: float = 0.2  # Tiempo mínimo antes de salir
 
 # 🆕 CONFIGURACIÓN DE COMBOS (RECURSOS)
 @export var default_combo: ComboData
@@ -65,6 +69,10 @@ func _process(delta: float) -> void:
 		if combo_window_timer <= 0 and combo_index > 0:
 			print("⏱️ Ventana de combo expirada")
 			reset_combo()
+	
+	# 🆕 Actualizar tiempo desde fin de animación
+	if not is_animation_playing:
+		time_since_animation_end += delta
 
 func try_attack() -> bool:
 	return _try_attack_internal("ground", false)
@@ -137,6 +145,7 @@ func _execute_attack(attack_type: String, is_air: bool) -> bool:
 	# Marcar animación como activa
 	is_animation_playing = true
 	can_queue_next = false
+	time_since_animation_end = 0.0  # 🆕 Reset
 	
 	# Iniciar ventana de combo
 	combo_window_timer = current_combo.combo_window
@@ -150,7 +159,7 @@ func _execute_attack(attack_type: String, is_air: bool) -> bool:
 	return true
 
 func _schedule_queue_window(attack_duration: float) -> void:
-	# Calcular cuándo se puede encolar (30% de la animación)
+	# Calcular cuándo se puede encolar (40% de la animación)
 	var queue_start_time = attack_duration * QUEUE_WINDOW_START
 	
 	await get_tree().create_timer(queue_start_time).timeout
@@ -170,6 +179,7 @@ func _on_animation_finished(anim_name: String) -> void:
 	# Marcar animación como terminada
 	is_animation_playing = false
 	can_queue_next = false
+	time_since_animation_end = 0.0  # 🆕 Resetear contador
 	
 	print("  Estado: buffer=", input_buffer_active)
 	
@@ -178,62 +188,47 @@ func _on_animation_finished(anim_name: String) -> void:
 		attack_component.enemies_hit_this_attack.clear()
 		print("  🔄 Lista de enemigos golpeados limpiada")
 	
-	# 🆕 VERIFICAR SI EL COMBO YA ESTÁ COMPLETO ANTES DE PROCESAR BUFFER
-	var current_combo = _get_active_combo()
-	var is_combo_complete = current_combo and combo_index >= current_combo.get_attack_count()
-	
-	if is_combo_complete:
-		print("  🎯 Combo completo - IGNORANDO BUFFER y RESETEANDO")
-		# Limpiar buffer sin ejecutarlo
-		input_buffer_active = false
-		buffered_attack_type = ""
-		
-		combo_finished.emit()
-		reset_combo()
-		_force_state_transition()
+	# 🆕 SI NO HAY INPUT BUFFERADO, INDICAR QUE PUEDE SALIR
+	if not input_buffer_active:
+		print("  ℹ️ Sin input bufferado - AttackState puede salir")
+		# NO resetear combo aquí, dejar que expire naturalmente
 		return
 	
-	# PROCESAR INPUT BUFFEADO (solo si el combo NO está completo)
-	if input_buffer_active:
-		print("  🔄 Ejecutando ataque buffeado: ", buffered_attack_type)
-		
-		# Limpiar buffer
-		input_buffer_active = false
-		var attack_to_execute = buffered_attack_type
-		buffered_attack_type = ""
-		
-		# Ejecutar siguiente ataque
-		_execute_attack(attack_to_execute, false)
-		return
+	# PROCESAR INPUT BUFFEADO
+	print("  🔄 Ejecutando ataque buffeado: ", buffered_attack_type)
 	
-	# Activar ventana de combo para siguiente golpe
-	combo_window_timer = COMBO_WINDOW_DURATION
-	print("  ⏳ Ventana de combo activa (", COMBO_WINDOW_DURATION, "s)")
+	# Limpiar buffer
+	input_buffer_active = false
+	var attack_to_execute = buffered_attack_type
+	buffered_attack_type = ""
+	
+	# Ejecutar siguiente ataque
+	_execute_attack(attack_to_execute, false)
 
-# 🆕 NUEVA FUNCIÓN: Forzar transición de estado
-func _force_state_transition() -> void:
-	if not player:
-		return
+# 🆕 NUEVA FUNCIÓN: ¿Puede salir del AttackState?
+func can_exit_attack_state() -> bool:
+	"""
+	Determina si es seguro salir del AttackState.
+	Retorna true solo cuando:
+	- No hay animación activa
+	- No hay input bufferado
+	- Ha pasado un grace period mínimo
+	"""
 	
-	var state_machine = player.get_node_or_null("StateMachine")
-	if not state_machine:
-		return
+	# Si está atacando activamente, NO salir
+	if is_animation_playing:
+		return false
 	
-	# Solo forzar transición si está en AttackState
-	if state_machine.current_state.name != "Attack":
-		return
+	# Si hay input bufferado, NO salir (va a ejecutar siguiente golpe)
+	if input_buffer_active:
+		return false
 	
-	print("🔄 Forzando transición de estado desde ComboSystem")
+	# Si apenas terminó la animación, dar un pequeño margen
+	if time_since_animation_end < ATTACK_EXIT_GRACE:
+		return false
 	
-	# Determinar estado siguiente
-	if player.is_on_floor():
-		var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
-		if input_dir != 0:
-			state_machine.change_to("run")
-		else:
-			state_machine.change_to("idle")
-	else:
-		state_machine.change_to("fall")
+	# ✅ OK para salir
+	return true
 
 func _get_active_combo() -> ComboData:
 	var weapon = player.get_current_weapon()
@@ -261,6 +256,7 @@ func reset_combo() -> void:
 	input_buffer_active = false
 	buffered_attack_type = ""
 	can_queue_next = false
+	time_since_animation_end = 0.0  # 🆕 Reset
 	
 	# Limpiar enemigos golpeados
 	if attack_component:
