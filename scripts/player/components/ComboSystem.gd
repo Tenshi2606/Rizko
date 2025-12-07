@@ -26,6 +26,9 @@ const QUEUE_WINDOW_START: float = 0.4
 var time_since_animation_end: float = 0.0
 const ATTACK_EXIT_GRACE: float = 0.2
 
+# 🆕 POGO INSTANT - Sin esperar animación
+var allow_instant_pogo: bool = true
+
 # 🆕 CONFIGURACIÓN DE COMBOS (RECURSOS)
 @export var default_combo: ComboData
 @export var weapon_combos: Dictionary = {}
@@ -56,7 +59,6 @@ func _ready() -> void:
 	print("✅ ComboSystem inicializado")
 	_print_combo_config()
 
-# 🆕 DEBUG: Imprimir configuración de combos
 func _print_combo_config() -> void:
 	print("  📦 Combos configurados:")
 	if default_combo:
@@ -96,8 +98,21 @@ func try_attack() -> bool:
 func try_air_attack() -> bool:
 	return _try_attack_internal("air", true)
 
+# 🆕 POGO INSTANT - No esperar animación
 func try_pogo_attack() -> bool:
-	return _try_attack_internal("pogo", false)
+	if not allow_instant_pogo:
+		return _try_attack_internal("pogo", false)
+	
+	# EJECUTAR INMEDIATAMENTE SIN BUFFER
+	print("🦘 POGO INSTANT - Ejecución directa")
+	
+	# Cancelar animación actual si existe
+	if is_animation_playing:
+		print("  ⚠️ Cancelando animación previa para pogo")
+		is_animation_playing = false
+		input_buffer_active = false
+	
+	return _execute_attack("pogo", false)
 
 func try_launcher_attack() -> bool:
 	return _try_attack_internal("launcher", false)
@@ -132,17 +147,21 @@ func _execute_attack(attack_type: String, is_air: bool) -> bool:
 	
 	print("  📦 Combo seleccionado: ", current_combo.combo_name)
 	
-	# Incrementar índice
-	combo_index += 1
-	var max_hits = current_combo.get_attack_count()
-	
-	# Ciclar si llegó al final
-	if combo_index > max_hits:
-		if current_combo.loop_combo:
-			combo_index = 1
-		else:
-			reset_combo()
-			return false
+	# 🆕 POGO NO INCREMENTA COMBO - Siempre es hit 1
+	if attack_type == "pogo":
+		combo_index = 1
+	else:
+		# Incrementar índice
+		combo_index += 1
+		var max_hits = current_combo.get_attack_count()
+		
+		# Ciclar si llegó al final
+		if combo_index > max_hits:
+			if current_combo.loop_combo:
+				combo_index = 1
+			else:
+				reset_combo()
+				return false
 	
 	# Obtener datos del ataque
 	var attack_data = current_combo.get_attack(combo_index - 1)
@@ -152,7 +171,7 @@ func _execute_attack(attack_type: String, is_air: bool) -> bool:
 	
 	var anim_name = attack_data.animation_name
 	
-	print("  🎯 Combo Hit ", combo_index, "/", max_hits)
+	print("  🎯 Combo Hit ", combo_index, "/", current_combo.get_attack_count())
 	print("  🎬 Animación: ", anim_name)
 	
 	# Reproducir animación
@@ -167,7 +186,9 @@ func _execute_attack(attack_type: String, is_air: bool) -> bool:
 	
 	combo_hit.emit(combo_index)
 	
-	_schedule_queue_window(attack_data.duration)
+	# 🆕 POGO NO TIENE QUEUE WINDOW - Salir inmediatamente después
+	if attack_type != "pogo":
+		_schedule_queue_window(attack_data.duration)
 	
 	return true
 
@@ -214,7 +235,7 @@ func _schedule_queue_window(attack_duration: float) -> void:
 func _on_animation_finished(anim_name: String) -> void:
 	print("\n✅ Animación terminada: ", anim_name)
 	
-	if not (anim_name.contains("attack") or anim_name.contains("scythe")):
+	if not (anim_name.contains("attack") or anim_name.contains("scythe") or anim_name.contains("pogo")):
 		return
 	
 	is_animation_playing = false
@@ -260,11 +281,6 @@ func _get_active_combo() -> ComboData:
 			return combo
 	
 	return default_combo
-
-func _get_active_combo_for_context(is_air: bool) -> ComboData:
-	if is_air and air_combo:
-		return air_combo
-	return _get_active_combo()
 
 func reset_combo() -> void:
 	if combo_index > 0:

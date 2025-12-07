@@ -351,7 +351,7 @@ tracks/2/keys = {
 
 [sub_resource type="Animation" id="Animation_5v6ai"]
 resource_name = "scythe_attack_pogo"
-length = 0.5
+length = 0.3
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -371,8 +371,8 @@ tracks/1/path = NodePath("Sprite2D:frame")
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.1, 0.16666667, 0.26666668, 0.33333334, 0.43333334),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"times": PackedFloat32Array(0, 0.06666667, 0.1, 0.16666667, 0.23333333, 0.26666668),
+"transitions": PackedFloat32Array(2, 1, 1, 1, 1, 0.5),
 "update": 1,
 "values": [88, 89, 90, 91, 92, 93]
 }
@@ -383,7 +383,7 @@ tracks/2/path = NodePath("HitboxContainer/PogoHitbox/PogoHitbox:disabled")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.23333333, 0.46666667),
+"times": PackedFloat32Array(0, 0.03333333, 0.26666668),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
 "values": [true, false, true]
@@ -522,7 +522,7 @@ _data = {
 size = Vector2(17, 27)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_tanta"]
-size = Vector2(39, 13)
+size = Vector2(39, 17.5)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_cam7v"]
 size = Vector2(16.75, 18.5)
@@ -541,6 +541,7 @@ speed = 150.0
 acceleration = 1850.0
 friction = 1550.0
 gravity_rising = 1650.0
+gravity_falling = 1600.0
 max_fall_speed = 580.0
 max_rise_speed = 780.0
 jump_initial_speed = 350.0
@@ -579,7 +580,7 @@ collision_mask = 2
 monitorable = false
 
 [node name="PogoHitbox" type="CollisionShape2D" parent="HitboxContainer/PogoHitbox"]
-position = Vector2(3, 20)
+position = Vector2(3, 22.25)
 shape = SubResource("RectangleShape2D_tanta")
 disabled = true
 
@@ -682,11 +683,11 @@ script = ExtResource("40_qc45h")
 script = ExtResource("26_u6omy")
 
 [node name="Luz Dinamica" type="PointLight2D" parent="."]
-visible = false
 z_index = 10
 material = SubResource("CanvasItemMaterial_u6omy")
 position = Vector2(18, -2)
 color = Color(0.7666196, 0.76661956, 0.76661956, 1)
+energy = 0.5
 shadow_enabled = true
 texture = ExtResource("27_0ela0")
 texture_scale = 3.0
@@ -697,7 +698,7 @@ scale = Vector2(0.40022212, 0.4358724)
 texture = SubResource("AtlasTexture_cam7v")
 hframes = 11
 vframes = 11
-frame = 26
+frame = 88
 
 [connection signal="body_entered" from="HitboxContainer/AirAttackHitbox" to="." method="_on_air_attack_hitbox_body_entered"]
 [connection signal="body_entered" from="HitboxContainer/PogoHitbox" to="." method="_on_pogo_hitbox_body_entered"]

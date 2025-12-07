@@ -211,13 +211,22 @@ func _calculate_knockback(body: Node2D, attack_type: String) -> Vector2:
 # ✨ EFECTOS ESPECIALES
 # ============================================
 
-func _apply_special_effects(_body: Node2D, attack_type: String) -> void:
+func _apply_special_effects(body: Node2D, attack_type: String) -> void:
 	match attack_type:
 		"pogo":
-			# Rebote del player
-			player.velocity.y = -400.0
+			# 🆕 REBOTE INSTANTÁNEO Y FUERTE
+			player.velocity.y = -450.0  # Rebote fuerte (ajusta según necesites)
 			player.hit_enemy_with_down_attack = true
-			print("  🦘 POGO BOUNCE!")
+			
+			# Feedback visual
+			var camera = player.get_node_or_null("Camera2D") as CameraController
+			if camera and camera.has_method("shake_camera"):
+				camera.shake_camera(15.0, 0.2)
+			
+			print("  🦘 POGO BOUNCE! velocity.y = ", player.velocity.y)
+			
+			# 🆕 EMITIR EVENTO
+			EventBus.pogo_bounce.emit(body)
 		
 		"launcher":
 			# Impulsar al player
