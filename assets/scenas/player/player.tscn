@@ -32,6 +32,18 @@ size = Vector2(11, 26)
 
 [sub_resource type="Animation" id="Animation_3p3td"]
 length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [99]
+}
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_cam7v"]
 atlas = ExtResource("8_cphw5")
@@ -168,7 +180,7 @@ tracks/1/path = NodePath("HitboxContainer/GroundAttackHitbox/GroundAttackHitbox:
 tracks/1/interp = 1
 tracks/1/loop_wrap = true
 tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.42993593, 0.8293077),
+"times": PackedFloat32Array(0, 0.42993593, 0.76666665),
 "transitions": PackedFloat32Array(1, 1, 1),
 "update": 1,
 "values": [true, false, true]
@@ -180,10 +192,10 @@ tracks/2/path = NodePath("Sprite2D:frame")
 tracks/2/interp = 1
 tracks/2/loop_wrap = true
 tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.13333334, 0.26666668, 0.4, 0.53333336, 0.6333333, 0.7, 0.76666665),
-"transitions": PackedFloat32Array(2, 1, 1, 1, 1, 1, 1, 2),
+"times": PackedFloat32Array(0.033333335, 0.099999994, 0.19999999, 0.3, 0.4, 0.5, 0.6, 0.6666667, 0.7660404),
+"transitions": PackedFloat32Array(2, 1, 1, 1, 1, 1, 1, 1, 0.5),
 "update": 1,
-"values": [99, 100, 101, 102, 103, 104, 105, 106]
+"values": [99, 100, 101, 102, 103, 104, 105, 106, 107]
 }
 
 [sub_resource type="Animation" id="Animation_l2rnc"]
@@ -236,7 +248,7 @@ tracks/0/path = NodePath("Sprite2D:frame")
 tracks/0/interp = 1
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0, 0.13333334, 0.26666668, 0.4, 0.53333336, 0.6333333, 0.7, 0.76666665),
+"times": PackedFloat32Array(0, 0.13333334, 0.26666668, 0.4, 0.53333336, 0.6, 0.6666667, 0.73333335),
 "transitions": PackedFloat32Array(2, 1, 1, 1, 1, 1, 1, 2),
 "update": 1,
 "values": [99, 100, 101, 102, 103, 104, 105, 106]
@@ -670,7 +682,6 @@ script = ExtResource("40_qc45h")
 script = ExtResource("26_u6omy")
 
 [node name="Luz Dinamica" type="PointLight2D" parent="."]
-visible = false
 z_index = 10
 material = SubResource("CanvasItemMaterial_u6omy")
 position = Vector2(0, -1)
@@ -682,10 +693,10 @@ texture_scale = 3.0
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(1, -0.9999999)
 scale = Vector2(0.40022212, 0.4358724)
-texture = ExtResource("28_8qt6n")
+texture = SubResource("AtlasTexture_cam7v")
 hframes = 11
 vframes = 11
-frame = 6
+frame = 99
 
 [connection signal="body_entered" from="HitboxContainer/AirAttackHitbox" to="." method="_on_air_attack_hitbox_body_entered"]
 [connection signal="body_entered" from="HitboxContainer/PogoHitbox" to="." method="_on_pogo_hitbox_body_entered"]

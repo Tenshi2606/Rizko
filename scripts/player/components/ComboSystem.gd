@@ -2,11 +2,6 @@
 extends Node
 class_name ComboSystem
 
-## ============================================
-## SISTEMA DE COMBOS - ESTILO DEVIL MAY CRY
-## ============================================
-## Input buffer para spam fluido sin reiniciar animaciones
-
 signal combo_hit(hit_index: int)
 signal combo_finished
 signal combo_reset
@@ -21,20 +16,17 @@ var combo_window_timer: float = 0.0
 const COMBO_WINDOW_DURATION: float = 2.0
 var active_combo: ComboData = null
 
-# 🆕 SISTEMA DE INPUT BUFFER (ANTI-SPAM)
-var is_animation_playing: bool = false  # Si hay animación activa
-var input_buffer_active: bool = false   # Si hay input en buffer
-var buffered_attack_type: String = ""   # Tipo de ataque en buffer
-var can_queue_next: bool = false        # Si puede encolar siguiente
+# Sistema de input buffer
+var is_animation_playing: bool = false
+var input_buffer_active: bool = false
+var buffered_attack_type: String = ""
+var can_queue_next: bool = false
 
 # Timing
-const BUFFER_WINDOW: float = 0.4        # Ventana para buffear input
-const QUEUE_WINDOW_START: float = 0.3   # Desde cuándo puede encolar (30% animación)
+const BUFFER_WINDOW: float = 0.4
+const QUEUE_WINDOW_START: float = 0.3
 
-# ============================================
-# 🎯 CONFIGURACIÓN DE COMBOS (RECURSOS)
-# ============================================
-
+# 🆕 CONFIGURACIÓN DE COMBOS (RECURSOS)
 @export var default_combo: ComboData
 @export var weapon_combos: Dictionary = {}
 @export var air_combo: ComboData
@@ -74,10 +66,6 @@ func _process(delta: float) -> void:
 			print("⏱️ Ventana de combo expirada")
 			reset_combo()
 
-# ============================================
-# 🎮 EJECUTAR ATAQUE (CON BUFFER)
-# ============================================
-
 func try_attack() -> bool:
 	return _try_attack_internal("ground", false)
 
@@ -94,7 +82,7 @@ func _try_attack_internal(attack_type: String, is_air: bool = false) -> bool:
 	print("\n🎮 try_attack llamado - Tipo:", attack_type)
 	print("  Estado: animación_activa=", is_animation_playing, " buffer=", input_buffer_active)
 	
-	# 🆕 CASO 1: Ya hay animación activa
+	# CASO 1: Ya hay animación activa
 	if is_animation_playing:
 		# Si puede encolar, guardar en buffer
 		if can_queue_next and not input_buffer_active:
@@ -106,7 +94,7 @@ func _try_attack_internal(attack_type: String, is_air: bool = false) -> bool:
 			print("  ❌ Spam ignorado (animación activa, buffer lleno)")
 			return false
 	
-	# 🆕 CASO 2: No hay animación, ejecutar inmediatamente
+	# CASO 2: No hay animación, ejecutar inmediatamente
 	return _execute_attack(attack_type, is_air)
 
 func _execute_attack(attack_type: String, is_air: bool) -> bool:
@@ -156,14 +144,10 @@ func _execute_attack(attack_type: String, is_air: bool) -> bool:
 	# Emitir señal
 	combo_hit.emit(combo_index)
 	
-	# 🆕 Programar cuándo se puede encolar siguiente
+	# Programar cuándo se puede encolar siguiente
 	_schedule_queue_window(attack_data.duration)
 	
 	return true
-
-# ============================================
-# 🕐 VENTANA DE ENCOLADO
-# ============================================
 
 func _schedule_queue_window(attack_duration: float) -> void:
 	# Calcular cuándo se puede encolar (30% de la animación)
@@ -175,10 +159,7 @@ func _schedule_queue_window(attack_duration: float) -> void:
 		can_queue_next = true
 		print("  🟢 Ventana de encolado activada")
 
-# ============================================
-# 🔔 CALLBACK: ANIMACIÓN TERMINADA
-# ============================================
-
+# 🆕 CALLBACK MEJORADO: ANIMACIÓN TERMINADA
 func _on_animation_finished(anim_name: String) -> void:
 	print("\n✅ Animación terminada: ", anim_name)
 	
@@ -192,7 +173,27 @@ func _on_animation_finished(anim_name: String) -> void:
 	
 	print("  Estado: buffer=", input_buffer_active)
 	
-	# 🆕 PROCESAR INPUT BUFFEADO
+	# 🆕 LIMPIAR LISTA DE GOLPEADOS SIEMPRE
+	if attack_component:
+		attack_component.enemies_hit_this_attack.clear()
+		print("  🔄 Lista de enemigos golpeados limpiada")
+	
+	# 🆕 VERIFICAR SI EL COMBO YA ESTÁ COMPLETO ANTES DE PROCESAR BUFFER
+	var current_combo = _get_active_combo()
+	var is_combo_complete = current_combo and combo_index >= current_combo.get_attack_count()
+	
+	if is_combo_complete:
+		print("  🎯 Combo completo - IGNORANDO BUFFER y RESETEANDO")
+		# Limpiar buffer sin ejecutarlo
+		input_buffer_active = false
+		buffered_attack_type = ""
+		
+		combo_finished.emit()
+		reset_combo()
+		_force_state_transition()
+		return
+	
+	# PROCESAR INPUT BUFFEADO (solo si el combo NO está completo)
 	if input_buffer_active:
 		print("  🔄 Ejecutando ataque buffeado: ", buffered_attack_type)
 		
@@ -205,23 +206,34 @@ func _on_animation_finished(anim_name: String) -> void:
 		_execute_attack(attack_to_execute, false)
 		return
 	
-	# 🆕 SIN BUFFER: Activar ventana de combo
+	# Activar ventana de combo para siguiente golpe
 	combo_window_timer = COMBO_WINDOW_DURATION
 	print("  ⏳ Ventana de combo activa (", COMBO_WINDOW_DURATION, "s)")
-	
-	# Limpiar lista de enemigos golpeados
-	if attack_component:
-		attack_component.enemies_hit_this_attack.clear()
-	
-	# Verificar fin de combo
-	var current_combo = _get_active_combo()
-	if current_combo and combo_index >= current_combo.get_attack_count():
-		print("  🎯 Combo completo!")
-		combo_finished.emit()
 
-# ============================================
-# 🗺️ HELPERS
-# ============================================
+# 🆕 NUEVA FUNCIÓN: Forzar transición de estado
+func _force_state_transition() -> void:
+	if not player:
+		return
+	
+	var state_machine = player.get_node_or_null("StateMachine")
+	if not state_machine:
+		return
+	
+	# Solo forzar transición si está en AttackState
+	if state_machine.current_state.name != "Attack":
+		return
+	
+	print("🔄 Forzando transición de estado desde ComboSystem")
+	
+	# Determinar estado siguiente
+	if player.is_on_floor():
+		var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
+		if input_dir != 0:
+			state_machine.change_to("run")
+		else:
+			state_machine.change_to("idle")
+	else:
+		state_machine.change_to("fall")
 
 func _get_active_combo() -> ComboData:
 	var weapon = player.get_current_weapon()

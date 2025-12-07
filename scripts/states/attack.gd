@@ -6,12 +6,25 @@ var attack_component: AttackComponent
 var combo_system: ComboSystem
 var is_ranged_attack: bool = false
 
+# 🆕 NUEVO: Forzar salida cuando termina animación
+var should_exit: bool = false
+var exit_timer: float = 0.0
+
+# 🆕 RED DE SEGURIDAD: Máximo tiempo en estado de ataque
+var max_attack_duration: float = 3.0  # 3 segundos máximo
+var time_in_state: float = 0.0
+
 func start():
 	print("\n=== ATTACK STATE START ===")
 	attack_component = player.get_node("AttackComponent") as AttackComponent
 	combo_system = player.get_node_or_null("ComboSystem") as ComboSystem
 	
-	# 🆕 VERIFICAR SI YA ESTÁ ATACANDO (NO REINICIAR)
+	# 🆕 RESET FLAGS
+	should_exit = false
+	exit_timer = 0.0
+	time_in_state = 0.0  # 🆕 Reset del timer de seguridad
+	
+	# Verificar si ya está atacando
 	if combo_system and combo_system.is_currently_attacking():
 		print("  ⚠️ Ya hay ataque en progreso - NO reiniciar")
 		return
@@ -28,15 +41,14 @@ func start():
 		# ATAQUE RANGED
 		is_ranged_attack = true
 		_handle_ranged_attack(weapon)
+		# 🆕 SALIR INMEDIATAMENTE DESPUÉS DE DISPARAR
+		should_exit = true
+		exit_timer = 0.3  # Esperar 0.3s para que se vea la animación
 		return
 	
 	# ATAQUE MELEE - Usar ComboSystem
 	is_ranged_attack = false
 	_handle_melee_attack()
-
-# ============================================
-# 🔫 ATAQUE RANGED
-# ============================================
 
 func _handle_ranged_attack(weapon: WeaponData) -> void:
 	print("🔫 Ataque ranged: ", weapon.weapon_name)
@@ -51,10 +63,6 @@ func _handle_ranged_attack(weapon: WeaponData) -> void:
 	else:
 		if player.animation_controller:
 			player.animation_controller.play("attack")
-
-# ============================================
-# ⚔️ ATAQUE MELEE
-# ============================================
 
 func _handle_melee_attack() -> void:
 	if not combo_system:
@@ -83,13 +91,28 @@ func _handle_melee_attack() -> void:
 	
 	if not success:
 		print("  ⚠️ No se pudo ejecutar ataque")
-
-# ============================================
-# 🔧 PHYSICS PROCESS
-# ============================================
+		# 🆕 SALIR SI FALLA
+		should_exit = true
+		exit_timer = 0.1
 
 func on_physics_process(delta: float) -> void:
-	# 🆕 PROCESAR SPAM DE INPUT (ComboSystem lo maneja)
+	# 🆕 RED DE SEGURIDAD: Salir si lleva demasiado tiempo
+	time_in_state += delta
+	if time_in_state > max_attack_duration:
+		print("⚠️ TIMEOUT: Salida forzada por exceder ", max_attack_duration, "s")
+		if combo_system:
+			combo_system.reset_combo()
+		_transition_out()
+		return
+	
+	# 🆕 SALIDA FORZADA
+	if should_exit:
+		exit_timer -= delta
+		if exit_timer <= 0:
+			_transition_out()
+			return
+	
+	# Procesar spam de input (ComboSystem lo maneja)
 	if Input.is_action_just_pressed("attack") and combo_system:
 		combo_system.try_attack()
 	
@@ -119,10 +142,20 @@ func on_physics_process(delta: float) -> void:
 			Player.AttackDirection.DOWN:
 				_handle_down_attack(delta)
 	
-	# 🆕 SALIR SOLO SI TERMINÓ TODO
+	# 🆕 VERIFICACIÓN MEJORADA DE SALIDA
 	if combo_system:
-		# Si NO está atacando Y NO está en ventana de combo
-		if not combo_system.is_currently_attacking() and not combo_system.is_in_combo():
+		# Salir SI:
+		# 1. NO está atacando actualmente
+		# 2. NO está en ventana de combo (esperando siguiente golpe)
+		# 3. NO hay input bufferado
+		var can_exit = (
+			not combo_system.is_currently_attacking() and
+			not combo_system.is_in_combo() and
+			not combo_system.input_buffer_active
+		)
+		
+		if can_exit:
+			print("✅ Condiciones de salida cumplidas - Transicionando")
 			_transition_out()
 
 func _transition_out() -> void:
@@ -134,10 +167,6 @@ func _transition_out() -> void:
 			state_machine.change_to("idle")
 	else:
 		state_machine.change_to("fall")
-
-# ============================================
-# 🎯 FÍSICA POR TIPO DE ATAQUE
-# ============================================
 
 func _handle_ranged_physics(delta: float) -> void:
 	var input_dir = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
@@ -199,11 +228,10 @@ func _handle_down_attack(delta: float) -> void:
 	
 	player.move_and_slide()
 
-# ============================================
-# 🔚 END
-# ============================================
-
 func end():
 	player.current_attack_direction = Player.AttackDirection.FORWARD
 	player.hit_enemy_with_down_attack = false
 	is_ranged_attack = false
+	should_exit = false
+	exit_timer = 0.0
+	time_in_state = 0.0  # 🆕 Reset del timer
