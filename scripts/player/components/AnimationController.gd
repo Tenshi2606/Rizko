@@ -35,14 +35,22 @@ func _ready() -> void:
 	
 	attack_component = player.get_node_or_null("AttackComponent") as AttackComponent
 	
-	# 🆕 CONECTAR A animation_started PARA LIMPIAR
+	# CONECTAR A animation_started Y animation_finished
 	if not animation_player.animation_started.is_connected(_on_animation_started):
 		animation_player.animation_started.connect(_on_animation_started)
 		print("  ✅ AnimationController conectado a animation_started")
 	
+	# 🆕 CONECTAR A animation_finished PARA DESACTIVAR HITBOXES
+	if not animation_player.animation_finished.is_connected(_on_animation_finished):
+		animation_player.animation_finished.connect(_on_animation_finished)
+		print("  ✅ AnimationController conectado a animation_finished")
+	
 	print("✅ AnimationController inicializado")
 
-# 🆕 LIMPIAR AL INICIAR NUEVA ANIMACIÓN
+# ============================================
+# 🆕 LIMPIAR AL INICIAR ANIMACIÓN
+# ============================================
+
 func _on_animation_started(anim_name: String) -> void:
 	if _is_attack_animation(anim_name):
 		print("🎬 Nueva animación iniciada: ", anim_name)
@@ -51,6 +59,39 @@ func _on_animation_started(anim_name: String) -> void:
 		if attack_component:
 			attack_component.enemies_hit_this_attack.clear()
 			print("  🧹 Lista limpiada al iniciar")
+
+# ============================================
+# 🆕 DESACTIVAR HITBOXES AL TERMINAR ANIMACIÓN
+# ============================================
+
+func _on_animation_finished(anim_name: String) -> void:
+	if not _is_attack_animation(anim_name):
+		return
+	
+	print("🎬 Animación terminada: ", anim_name, " - Desactivando hitboxes")
+	
+	# FORZAR DESACTIVACIÓN DE TODAS LAS HITBOXES
+	_force_deactivate_all_hitboxes()
+
+func _force_deactivate_all_hitboxes() -> void:
+	if not player:
+		return
+	
+	var hitbox_container = player.get_node_or_null("HitboxContainer")
+	if not hitbox_container:
+		return
+	
+	# Desactivar TODAS las hitboxes de ataque
+	for hitbox in hitbox_container.get_children():
+		if hitbox is Area2D:
+			hitbox.monitoring = false
+			hitbox.monitorable = false
+	
+	print("  🔒 TODAS las hitboxes desactivadas (seguridad)")
+
+# ============================================
+# PLAY (CON LIMPIEZA)
+# ============================================
 
 func play(base_name: String, force: bool = false) -> void:
 	if not animation_player:
@@ -68,6 +109,9 @@ func play(base_name: String, force: bool = false) -> void:
 			full_name = base_name
 		else:
 			return
+	
+	# 🆕 DESACTIVAR HITBOXES ANTES DE CAMBIAR ANIMACIÓN
+	_force_deactivate_all_hitboxes()
 	
 	previous_animation = current_animation
 	current_animation = full_name
@@ -104,6 +148,9 @@ func _get_animation_name(base_name: String) -> String:
 func stop() -> void:
 	if animation_player:
 		animation_player.stop()
+	
+	# 🆕 Desactivar hitboxes al parar
+	_force_deactivate_all_hitboxes()
 
 func pause() -> void:
 	if animation_player:

@@ -3,7 +3,7 @@ extends Node
 class_name AttackComponent
 
 ## ============================================
-## ATTACK COMPONENT - DETECCIÓN DE DIRECCIONES
+## ATTACK COMPONENT - FIX AUTODETECCIÓN
 ## ============================================
 
 var player: Player
@@ -13,7 +13,7 @@ var ground_hitbox: Area2D = null
 var air_hitbox: Area2D = null
 var pogo_hitbox: Area2D = null
 var launcher_hitbox: Area2D = null
-var up_slash_hitbox: Area2D = null  # 🆕 NUEVO HITBOX
+var up_slash_hitbox: Area2D = null
 
 var current_active_hitbox: Area2D = null
 var is_attacking: bool = false
@@ -35,7 +35,7 @@ func _ready() -> void:
 	_print_hitbox_status()
 
 # ============================================
-# 🔍 BUSCAR HITBOXES (INCLUYE UP SLASH)
+# 🔍 BUSCAR HITBOXES
 # ============================================
 
 func _find_all_hitboxes() -> void:
@@ -49,7 +49,7 @@ func _find_all_hitboxes() -> void:
 	air_hitbox = hitbox_container.get_node_or_null("AirAttackHitbox")
 	pogo_hitbox = hitbox_container.get_node_or_null("PogoHitbox")
 	launcher_hitbox = hitbox_container.get_node_or_null("LauncherHitbox")
-	up_slash_hitbox = hitbox_container.get_node_or_null("UpSlashHitbox")  # 🆕
+	up_slash_hitbox = hitbox_container.get_node_or_null("UpSlashHitbox")
 
 func _connect_all_hitboxes() -> void:
 	if ground_hitbox:
@@ -72,7 +72,6 @@ func _connect_all_hitboxes() -> void:
 			launcher_hitbox.body_entered.connect(_on_launcher_hitbox_entered)
 		print("  ✅ LauncherHitbox conectado")
 	
-	# 🆕 CONECTAR UP SLASH
 	if up_slash_hitbox:
 		if not up_slash_hitbox.body_entered.is_connected(_on_up_slash_hitbox_entered):
 			up_slash_hitbox.body_entered.connect(_on_up_slash_hitbox_entered)
@@ -84,35 +83,59 @@ func _print_hitbox_status() -> void:
 	print("    Air: ", air_hitbox != null)
 	print("    Pogo: ", pogo_hitbox != null)
 	print("    Launcher: ", launcher_hitbox != null)
-	print("    UpSlash: ", up_slash_hitbox != null, " 🆕")
+	print("    UpSlash: ", up_slash_hitbox != null)
 
 # ============================================
-# 🎯 CALLBACKS DE HITBOXES
+# 🎯 CALLBACKS DE HITBOXES (CON FILTRO)
 # ============================================
 
 func _on_ground_hitbox_entered(body: Node2D) -> void:
+	# 🆕 FILTRO CRÍTICO: Ignorar al propio Player
+	if body == player:
+		print("  ⚠️ GroundHitbox ignoró autodetección del Player")
+		return
+	
 	print("🎯 GroundHitbox detectó: ", body.name)
 	_handle_hit(body, "ground")
 
 func _on_air_hitbox_entered(body: Node2D) -> void:
+	# 🆕 FILTRO CRÍTICO
+	if body == player:
+		print("  ⚠️ AirHitbox ignoró autodetección del Player")
+		return
+	
 	print("🎯 AirHitbox detectó: ", body.name)
 	_handle_hit(body, "air")
 
 func _on_pogo_hitbox_entered(body: Node2D) -> void:
+	# 🆕 FILTRO CRÍTICO
+	if body == player:
+		print("  ⚠️ PogoHitbox ignoró autodetección del Player")
+		return
+	
 	print("🎯 PogoHitbox detectó: ", body.name)
 	_handle_hit(body, "pogo")
 
 func _on_launcher_hitbox_entered(body: Node2D) -> void:
+	# 🆕 FILTRO CRÍTICO
+	if body == player:
+		print("  ⚠️ LauncherHitbox ignoró autodetección del Player")
+		return
+	
 	print("🎯 LauncherHitbox detectó: ", body.name)
 	_handle_hit(body, "launcher")
 
-# 🆕 CALLBACK UP SLASH
 func _on_up_slash_hitbox_entered(body: Node2D) -> void:
+	# 🆕 FILTRO CRÍTICO
+	if body == player:
+		print("  ⚠️ UpSlashHitbox ignoró autodetección del Player")
+		return
+	
 	print("🎯 UpSlashHitbox detectó: ", body.name)
 	_handle_hit(body, "up_slash")
 
 # ============================================
-# 💥 PROCESAR GOLPE
+# 💥 PROCESAR GOLPE (SIN CAMBIOS)
 # ============================================
 
 func _handle_hit(body: Node2D, attack_type: String) -> void:
@@ -152,7 +175,7 @@ func _handle_hit(body: Node2D, attack_type: String) -> void:
 		state_machine.current_state.register_hit()
 
 # ============================================
-# 📊 CÁLCULOS
+# 📊 CÁLCULOS (SIN CAMBIOS)
 # ============================================
 
 func _calculate_damage() -> Dictionary:
@@ -188,9 +211,9 @@ func _calculate_knockback(body: Node2D, attack_type: String) -> Vector2:
 		"pogo":
 			knockback = Vector2(0, 300)
 		"launcher":
-			knockback = Vector2(0, -450)  # 🆕 Más fuerte que up_slash
+			knockback = Vector2(0, -450)
 		"up_slash":
-			knockback = Vector2(50, -250)  # 🆕 Knockback diagonal
+			knockback = Vector2(50, -250)
 	
 	var dir = (body.global_position - player.global_position).normalized()
 	knockback.x = abs(knockback.x) * sign(dir.x)
@@ -198,7 +221,7 @@ func _calculate_knockback(body: Node2D, attack_type: String) -> Vector2:
 	return knockback
 
 # ============================================
-# ✨ EFECTOS ESPECIALES
+# ✨ EFECTOS ESPECIALES (SIN CAMBIOS)
 # ============================================
 
 func _apply_special_effects(body: Node2D, attack_type: String) -> void:
@@ -215,20 +238,17 @@ func _apply_special_effects(body: Node2D, attack_type: String) -> void:
 			EventBus.pogo_bounce.emit(body)
 		
 		"launcher":
-			# 🆕 LAUNCHER - Impulsar al player hacia arriba
 			player.velocity.y = -350
 			print("  🚀 LAUNCHER! Player impulsado")
 			
-			# 🆕 Aplicar fuerza de lanzamiento al enemigo
 			if body.has_method("apply_launch_force"):
 				body.apply_launch_force(Vector2(0, -500))
 			
 			EventBus.enemy_launched.emit(body)
 		
 		"up_slash":
-			# 🆕 UP SLASH - Impulso leve
 			if not player.is_on_floor():
-				player.velocity.y = max(player.velocity.y, -200)  # Leve impulso
+				player.velocity.y = max(player.velocity.y, -200)
 			print("  ⬆️ UP SLASH!")
 
 func _apply_lifesteal(damage: int) -> void:
@@ -246,11 +266,11 @@ func _apply_camera_shake(is_critical: bool) -> void:
 		camera.shake_camera(intensity, 0.2)
 
 # ============================================
-# 🎮 API PÚBLICA - DETECCIÓN DE DIRECCIÓN
+# 🎮 API PÚBLICA
 # ============================================
 
 func get_attack_direction() -> Player.AttackDirection:
-	# 🆕 PRIORIDAD 1: DOWN + EN TIERRA = LAUNCHER
+	# PRIORIDAD 1: DOWN + EN TIERRA = LAUNCHER
 	if Input.is_action_pressed("ui_down"):
 		if player.is_on_floor():
 			print("    🎯 Detectado: LAUNCHER (↓+X en tierra)")
@@ -259,7 +279,7 @@ func get_attack_direction() -> Player.AttackDirection:
 			print("    🎯 Detectado: POGO (↓+X en aire)")
 			return Player.AttackDirection.DOWN
 	
-	# 🆕 PRIORIDAD 2: UP = UP SLASH
+	# PRIORIDAD 2: UP = UP SLASH
 	if Input.is_action_pressed("ui_up"):
 		print("    🎯 Detectado: UP SLASH (↑+X)")
 		return Player.AttackDirection.UP

@@ -321,6 +321,7 @@ func _end_healing(reason: String) -> void:
 	
 	print("🩹 Curación finalizada: ", reason)
 	
+	# 🔥 CRÍTICO: LIMPIAR TODO AL TERMINAR CURACIÓN
 	player.is_in_healing_mode = false
 	player.active_healing_fragment = null
 	is_attacking = false
@@ -331,8 +332,13 @@ func _end_healing(reason: String) -> void:
 	dash_timer = 0.0
 	dash_cooldown_timer = 0.0
 	
-	# Desactivar hitbox
+	# 🆕 DESACTIVAR HITBOX FORZADAMENTE
 	_deactivate_hitbox()
+	
+	# 🆕 LIMPIAR LISTA DE ENEMIGOS GOLPEADOS
+	if player.attack_component:
+		player.attack_component.enemies_hit_this_attack.clear()
+		print("  🧹 Lista de golpes limpiada al terminar curación")
 	
 	# Desactivar aura
 	var vfx_manager = player.get_node_or_null("VFXManager") as VFXManager
@@ -354,8 +360,12 @@ func end():
 	player.is_in_healing_mode = false
 	player.active_healing_fragment = null
 	
-	# Asegurar que hitbox esté desactivado
+	# 🆕 ASEGURAR LIMPIEZA AL SALIR
 	_deactivate_hitbox()
+	
+	if player.attack_component:
+		player.attack_component.enemies_hit_this_attack.clear()
+		print("  🧹 Lista limpiada al salir de HealState")
 	
 	# Desactivar aura
 	var vfx_manager = player.get_node_or_null("VFXManager") as VFXManager

@@ -104,6 +104,11 @@ func try_air_attack() -> bool:
 func try_pogo_attack() -> bool:
 	print("🦘 POGO INSTANT")
 	
+	# 🔥 VALIDAR ARMA REQUERIDA (SOLO GUADAÑA)
+	if not _validate_weapon_for_attack("pogo"):
+		print("  ❌ POGO requiere Guadaña Espectral")
+		return false
+	
 	if is_animation_playing:
 		print("  ⚠️ Cancelando para pogo")
 		is_animation_playing = false
@@ -118,12 +123,33 @@ func try_pogo_attack() -> bool:
 # 🆕 LAUNCHER (↓+X en tierra)
 func try_launcher_attack() -> bool:
 	print("🚀 LAUNCHER")
+	
+	# 🔥 VALIDAR ARMA REQUERIDA (SOLO GUADAÑA)
+	if not _validate_weapon_for_attack("launcher"):
+		print("  ❌ LAUNCHER requiere Guadaña Espectral")
+		return false
+	
 	return _try_attack_internal("launcher", false)
 
 # 🆕 UP SLASH (↑+X)
 func try_up_slash_attack() -> bool:
 	print("⬆️ UP SLASH")
 	return _try_attack_internal("up_slash", false)
+
+# 🆕 VALIDAR ARMA REQUERIDA PARA ATAQUE
+func _validate_weapon_for_attack(attack_type: String) -> bool:
+	var weapon = player.get_current_weapon()
+	
+	if not weapon:
+		return false
+	
+	# 🔥 POGO Y LAUNCHER SOLO CON GUADAÑA
+	if attack_type in ["pogo", "launcher"]:
+		if weapon.weapon_id != "scythe":
+			print("    ⚠️ Ataque especial requiere Guadaña (arma actual: ", weapon.weapon_name, ")")
+			return false
+	
+	return true
 
 # ============================================
 # 🎯 LÓGICA INTERNA

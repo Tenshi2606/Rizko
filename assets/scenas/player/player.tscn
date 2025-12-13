@@ -269,46 +269,6 @@ tracks/2/keys = {
 "values": [true, false, true]
 }
 
-[sub_resource type="Animation" id="Animation_ber0w"]
-resource_name = "scythe_attack_air"
-length = 0.4
-tracks/0/type = "value"
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/path = NodePath("Sprite2D:texture")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/keys = {
-"times": PackedFloat32Array(0),
-"transitions": PackedFloat32Array(1),
-"update": 1,
-"values": [ExtResource("28_8qt6n")]
-}
-tracks/1/type = "value"
-tracks/1/imported = false
-tracks/1/enabled = true
-tracks/1/path = NodePath("Sprite2D:frame")
-tracks/1/interp = 1
-tracks/1/loop_wrap = true
-tracks/1/keys = {
-"times": PackedFloat32Array(0, 0.06666667, 0.13333334, 0.16666667, 0.23333333, 0.3, 0.36666667),
-"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
-"update": 1,
-"values": [0, 1, 2, 3, 4, 5, 6]
-}
-tracks/2/type = "value"
-tracks/2/imported = false
-tracks/2/enabled = true
-tracks/2/path = NodePath("HitboxContainer/AirAttackHitbox/AirAttackHitbox:disabled")
-tracks/2/interp = 1
-tracks/2/loop_wrap = true
-tracks/2/keys = {
-"times": PackedFloat32Array(0, 0.2, 0.4),
-"transitions": PackedFloat32Array(1, 1, 1),
-"update": 1,
-"values": [true, false, true]
-}
-
 [sub_resource type="Animation" id="Animation_qbec2"]
 resource_name = "scythe_attack_launcher"
 length = 0.6
@@ -499,6 +459,46 @@ tracks/1/keys = {
 "values": [SubResource("AtlasTexture_cam7v")]
 }
 
+[sub_resource type="Animation" id="Animation_ber0w"]
+resource_name = "scythe_attack_air_1"
+length = 0.4
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:texture")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [ExtResource("28_8qt6n")]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:frame")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.06666667, 0.13333334, 0.16666667, 0.23333333, 0.3, 0.36666667),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3, 4, 5, 6]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("HitboxContainer/AirAttackHitbox/AirAttackHitbox:disabled")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.2, 0.4),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 1,
+"values": [true, false, true]
+}
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_ljuf7"]
 _data = {
 &"RESET": SubResource("Animation_3p3td"),
@@ -509,7 +509,7 @@ _data = {
 &"scythe_attack_1": SubResource("Animation_vdotp"),
 &"scythe_attack_2": SubResource("Animation_l2rnc"),
 &"scythe_attack_3": SubResource("Animation_qc45h"),
-&"scythe_attack_air": SubResource("Animation_ber0w"),
+&"scythe_attack_air_1": SubResource("Animation_ber0w"),
 &"scythe_attack_launcher": SubResource("Animation_qbec2"),
 &"scythe_attack_pogo": SubResource("Animation_5v6ai"),
 &"scythe_fall": SubResource("Animation_3svpr"),
@@ -568,7 +568,7 @@ libraries = {
 [node name="HitboxContainer" type="Node2D" parent="."]
 
 [node name="AirAttackHitbox" type="Area2D" parent="HitboxContainer"]
-collision_layer = 2
+collision_layer = 0
 collision_mask = 2
 monitorable = false
 
@@ -578,7 +578,7 @@ shape = SubResource("RectangleShape2D_ljuf7")
 disabled = true
 
 [node name="PogoHitbox" type="Area2D" parent="HitboxContainer"]
-collision_layer = 2
+collision_layer = 0
 collision_mask = 2
 monitorable = false
 
@@ -588,7 +588,7 @@ shape = SubResource("RectangleShape2D_tanta")
 disabled = true
 
 [node name="LauncherHitbox" type="Area2D" parent="HitboxContainer"]
-collision_layer = 2
+collision_layer = 0
 collision_mask = 2
 monitorable = false
 
@@ -598,7 +598,7 @@ shape = SubResource("RectangleShape2D_cam7v")
 disabled = true
 
 [node name="GroundAttackHitbox" type="Area2D" parent="HitboxContainer"]
-collision_layer = 2
+collision_layer = 0
 collision_mask = 2
 monitorable = false
 
@@ -706,10 +706,10 @@ texture_scale = 3.0
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(1, -1.0000001)
 scale = Vector2(0.40022212, 0.44189453)
-texture = ExtResource("28_8qt6n")
+texture = SubResource("AtlasTexture_cam7v")
 hframes = 11
 vframes = 11
-frame = 6
+frame = 99
 
 [connection signal="body_entered" from="HitboxContainer/AirAttackHitbox" to="." method="_on_air_attack_hitbox_body_entered"]
 [connection signal="body_entered" from="HitboxContainer/PogoHitbox" to="." method="_on_pogo_hitbox_body_entered"]
